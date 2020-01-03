@@ -1,0 +1,8 @@
+#!/bin/sh
+
+rm rest-proxy/libs/kafka*
+rm cp-kafka-oauth/libs/kafka*
+cp ../kafka-ims-rest/target/*-jar-with-dependencies.jar ./rest-proxy/libs
+cp ../kafka-ims-java/target/*-jar-with-dependencies.jar ./cp-kafka-oauth/libs
+
+docker-compose build --no-cache
