@@ -1,0 +1,7 @@
+FROM centos:7
+RUN yum -y install rpm-build java-1.8.0-openjdk-devel java-1.8.0-openjdk-headless maven
+WORKDIR /root
+ARG release
+ARG version
+COPY . .
+RUN rpmbuild -vv -bb -D "version $version" -D "release $release" kafka-ims-rest-client-rpmbuild.spec
