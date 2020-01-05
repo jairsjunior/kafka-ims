@@ -124,7 +124,7 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
             log.debug("Token doesn't have required scopes! We cannot accept this token");
             log.debug("Required scope is: {}", DIM_CORE_SCOPE);
             log.debug("Token has following scopes: {}", scopes);
-            OAuthBearerValidationResult.newFailure("Required scope missing", DIM_CORE_SCOPE, "").throwExceptionIfFailed();
+            OAuthBearerValidationResult.newFailure(IMSValidatorException.KAFKA_EXCEPTION_WITHOUT_SCOPE_MSG, DIM_CORE_SCOPE, "").throwExceptionIfFailed();
         }
 
         log.debug("Validated IMS Token: {}", token.toString());

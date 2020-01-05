@@ -48,21 +48,6 @@ public class OAuthFilter implements ContainerRequestFilter {
         }
     }
 
-//    private IMSBearerTokenJwt getBearerInformation(ContainerRequestContext containerRequestContext) throws RestNotAuthorizedException {
-//        String authorizationHeader = containerRequestContext.getHeaderString("Authorization");
-//        if(authorizationHeader == null){
-//            OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
-//            throw new IMSRestException(IMSRestException.BEARER_TOKEN_NOT_SENT_CODE, IMSRestException.BEARER_TOKEN_NOT_SENT_MSG);
-//        }
-//        if (authorizationHeader.startsWith(AUTHENTICATION_PREFIX)) {
-//            String bearer = authorizationHeader.substring(AUTHENTICATION_PREFIX.length()).trim();
-//            return OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer(bearer);
-//        }else{
-//            OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
-//            throw new IMSRestException(IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_CODE, IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_MSG + AUTHENTICATION_PREFIX);
-//        }
-//    }
-
     private KafkaRestContext getKafkaRestContext(final String resourceType, final IMSBearerTokenJwt principal) throws IOException {
         log.debug("getKafkaRestContext");
         final KafkaRestContext context;
@@ -73,10 +58,6 @@ public class OAuthFilter implements ContainerRequestFilter {
                 OAuthMetrics.getInstance().incCountOfRequestsFailedExpiredToken();
                 throw new IMSRestException(IMSRestException.BEARER_TOKEN_EXPIRED_CODE, IMSRestException.BEARER_TOKEN_EXPIRED_MSG);
             }
-//            if(!OAuthRestProxyUtil.validateRequiredScope(principal, oauthSecurityRestConfig.getOriginalProperties().getProperty("ims.allowed.scope"))){
-//                OAuthMetrics.getInstance().incCountOfRequestsFailedInvalidScope();
-//                throw new IMSRestException(IMSRestException.BEARER_TOKEN_INVALID_SCOPE_CODE, IMSRestException.BEARER_TOKEN_INVALID_SCOPE_MSG);
-//            }
             try {
                 log.debug("create of bearerTokenKafkaRestConfig");
                 bearerTokenKafkaRestConfig = new KafkaOAuthSecurityRestConfig(this.oauthSecurityRestConfig.getOriginalProperties(), principal);
@@ -86,13 +67,8 @@ public class OAuthFilter implements ContainerRequestFilter {
                 throw new IOException(e);
             }
             log.debug("Get context using Factory");
-            try{
-                log.info("Get Context Instance");
-                context = KafkaOAuthRestContextFactory.getInstance().getContext(principal, bearerTokenKafkaRestConfig, resourceType, true);
-            }catch (Exception e){
-                log.info("Exeception catched!!!");
-                throw new IOException(e);
-            }
+            log.info("Get Context Instance");
+            context = KafkaOAuthRestContextFactory.getInstance().getContext(principal, bearerTokenKafkaRestConfig, resourceType, true);
         } else {
             log.info("Exeception catched invalid token!!!");
             OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
