@@ -48,7 +48,7 @@ public class OAuthFilter implements ContainerRequestFilter {
         }
     }
 
-    private KafkaRestContext getKafkaRestContext(final String resourceType, final IMSBearerTokenJwt principal) throws IOException {
+    private KafkaRestContext getKafkaRestContext(final String resourceType, final IMSBearerTokenJwt principal) throws IMSRestException {
         log.debug("getKafkaRestContext");
         final KafkaRestContext context;
         final KafkaOAuthSecurityRestConfig bearerTokenKafkaRestConfig;
@@ -64,7 +64,7 @@ public class OAuthFilter implements ContainerRequestFilter {
             }
             catch (RestConfigException e) {
                 log.debug("RestConfigException");
-                throw new IOException(e);
+                throw new IMSRestException(IMSRestException.REST_CONFIGURATION_ERROR_CODE, IMSRestException.REST_CONFIGURATION_ERROR_MSG + e.getMessage());
             }
             log.debug("Get context using Factory");
             log.info("Get Context Instance");

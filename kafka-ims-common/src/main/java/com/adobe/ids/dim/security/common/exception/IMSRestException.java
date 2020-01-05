@@ -23,6 +23,8 @@ public class IMSRestException extends RestNotAuthorizedException {
     public static int BEARER_TOKEN_EXPIRED_CODE = 40005;
     public static String BEARER_IS_NOT_INSTANCE_IMS_JWT_MSG = "Principal is not a instance of IMSBearerTokenJwt";
     public static int BEARER_IS_NOT_INSTANCE_IMS_JWT_CODE = 40006;
+    public static String REST_CONFIGURATION_ERROR_MSG = "Problems to create rest config object: ";
+    public static int REST_CONFIGURATION_ERROR_CODE = 40007;
 
     public IMSRestException(int errCode, String message) {
         super("Error Code: " + String.valueOf(errCode) +", Error Message: " + message, errCode);
