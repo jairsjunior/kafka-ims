@@ -6,13 +6,11 @@ public class OAuthMetrics implements OAuthMetricsMBean {
     private Integer countOfRequestSuccess;
     private Integer countOfRequestFailedInvalidToken;
     private Integer countOfRequestFailedExpiredToken;
-    private Integer countOfRequestFailedInvalidScope;
 
     public OAuthMetrics(){
         this.countOfRequestSuccess = 0;
         this.countOfRequestFailedInvalidToken = 0;
         this.countOfRequestFailedExpiredToken = 0;
-        this.countOfRequestFailedInvalidScope = 0;
     }
 
     @Override
@@ -30,12 +28,6 @@ public class OAuthMetrics implements OAuthMetricsMBean {
         return countOfRequestFailedExpiredToken;
     }
 
-    @Override
-    public Integer getInvalidIMSScopesCount() {
-        return countOfRequestFailedInvalidScope;
-    }
-
-
     public void incCountOfRequestSuccess(){
         this.countOfRequestSuccess++;
     }
@@ -46,10 +38,6 @@ public class OAuthMetrics implements OAuthMetricsMBean {
 
     public void incCountOfRequestsFailedExpiredToken(){
         this.countOfRequestFailedExpiredToken++;
-    }
-
-    public void incCountOfRequestsFailedInvalidScope(){
-        this.countOfRequestFailedInvalidScope++;
     }
 
     public static OAuthMetrics getInstance(){

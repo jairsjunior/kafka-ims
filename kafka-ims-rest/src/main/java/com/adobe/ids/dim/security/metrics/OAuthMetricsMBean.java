@@ -4,5 +4,4 @@ public interface OAuthMetricsMBean {
     Integer getSuccessfullRequestCount();
     Integer getInvalidTokenErrorCount();
     Integer getExpiredTokenErrorCount();
-    Integer getInvalidIMSScopesCount();
 }

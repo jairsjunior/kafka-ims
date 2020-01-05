@@ -50,7 +50,7 @@ public class OAuthRestProxyUtil {
         return token.scope().contains(requiredScope);
     }
 
-    public static IMSBearerTokenJwt getBearerInformation(ContainerRequestContext containerRequestContext){
+    public static IMSBearerTokenJwt getBearerInformation(ContainerRequestContext containerRequestContext) throws IMSRestException{
         String authorizationHeader = containerRequestContext.getHeaderString("Authorization");
         if(authorizationHeader == null){
             OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();

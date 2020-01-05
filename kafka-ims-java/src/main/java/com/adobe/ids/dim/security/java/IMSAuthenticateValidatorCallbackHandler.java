@@ -11,7 +11,7 @@ package com.adobe.ids.dim.security.java;
 
 import com.adobe.ids.dim.security.common.exception.IMSValidatorException;
 import com.adobe.ids.dim.security.util.StringsUtil;
-import metrics.OAuthMetricsValidator;
+import com.adobe.ids.dim.security.metrics.OAuthMetricsValidator;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerExtensionsValidatorCallback;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule;
@@ -125,7 +125,7 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
         Set<String> scopes = token.scope();
 
         if (!scopes.contains(DIM_CORE_SCOPE)) {
-            OAuthMetricsValidator.getInstance().incCountOfRequestsFailedWithoutACL();
+            OAuthMetricsValidator.getInstance().incCountOfRequestsFailedWithoutScope();
             log.debug("Token doesn't have required scopes! We cannot accept this token");
             log.debug("Required scope is: {}", DIM_CORE_SCOPE);
             log.debug("Token has following scopes: {}", scopes);
