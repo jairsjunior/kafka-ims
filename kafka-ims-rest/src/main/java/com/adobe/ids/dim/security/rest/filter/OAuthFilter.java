@@ -10,6 +10,7 @@ import io.confluent.kafkarest.KafkaRestContext;
 import io.confluent.kafkarest.extension.KafkaRestContextProvider;
 import io.confluent.kafkarest.resources.v2.ConsumersResource;
 import io.confluent.rest.RestConfigException;
+import io.confluent.rest.exceptions.RestNotAuthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +26,7 @@ public class OAuthFilter implements ContainerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(OAuthFilter.class);
     private final KafkaOAuthSecurityRestConfig oauthSecurityRestConfig;
-    private final String AUTHENTICATION_PREFIX = "Bearer";
+
     @Context
     ResourceInfo resourceInfo;
 
@@ -37,28 +38,13 @@ public class OAuthFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {
         log.debug("Filter of OAuthFilter");
         if (containerRequestContext.getSecurityContext() != null) {
-            final String resourceType = this.getResourceType(containerRequestContext);
+            final String resourceType = OAuthRestProxyUtil.getResourceType(containerRequestContext, resourceInfo);
             log.debug("ResourceType: " + resourceType);
-            final IMSBearerTokenJwt principal = getBearerInformation(containerRequestContext);
+            final IMSBearerTokenJwt principal = OAuthRestProxyUtil.getBearerInformation(containerRequestContext);
             log.debug("Principal: " + principal.toString());
             final KafkaRestContext context = this.getKafkaRestContext(resourceType, principal);
             log.debug("Context: " + context.toString());
             KafkaRestContextProvider.setCurrentContext(context);
-        }
-    }
-
-    private IMSBearerTokenJwt getBearerInformation(ContainerRequestContext containerRequestContext) throws IOException {
-        String authorizationHeader = containerRequestContext.getHeaderString("Authorization");
-        if(authorizationHeader == null){
-            OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
-            throw new IMSRestException(IMSRestException.BEARER_TOKEN_NOT_SENT_CODE, IMSRestException.BEARER_TOKEN_NOT_SENT_MSG);
-        }
-        if (authorizationHeader.startsWith(AUTHENTICATION_PREFIX)) {
-            String bearer = authorizationHeader.substring(AUTHENTICATION_PREFIX.length()).trim();
-            return OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer(bearer);
-        }else{
-            OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
-            throw new IMSRestException(IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_CODE, IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_MSG + AUTHENTICATION_PREFIX);
         }
     }
 
@@ -81,28 +67,17 @@ public class OAuthFilter implements ContainerRequestFilter {
                 throw new IOException(e);
             }
             log.debug("Get context using Factory");
+            log.info("Get Context Instance");
             context = KafkaOAuthRestContextFactory.getInstance().getContext(principal, bearerTokenKafkaRestConfig, resourceType, true);
-            OAuthMetrics.getInstance().incCountOfRequestSuccess();
         } else {
+            log.info("Exeception catched invalid token!!!");
             OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
             log.debug("principal is not a instance of IMSBearerTokenJwt");
             throw new IMSRestException(IMSRestException.BEARER_IS_NOT_INSTANCE_IMS_JWT_CODE, IMSRestException.BEARER_IS_NOT_INSTANCE_IMS_JWT_MSG);
         }
-        log.debug("context: " + context.toString());
+        log.info("context: " + context.toString());
         return context;
     }
 
-    private String getResourceType(final ContainerRequestContext requestContext) {
-        log.debug("getResourceType");
-        if (ConsumersResource.class.equals(this.resourceInfo.getResourceClass()) || io.confluent.kafkarest.resources.ConsumersResource.class.equals(this.resourceInfo.getResourceClass())) {
-            log.debug("consumer");
-            return "consumer";
-        }
-        if (requestContext.getMethod().equals("POST")) {
-            log.debug("producer");
-            return "producer";
-        }
-        log.debug("admin");
-        return "admin";
-    }
+
 }

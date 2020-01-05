@@ -1,6 +1,7 @@
 package com.adobe.ids.dim.security.rest;
 
 import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
+import com.adobe.ids.dim.security.common.exception.IMSRestException;
 import com.adobe.ids.dim.security.util.OAuthRestProxyUtil;
 import kafka.common.KafkaException;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
@@ -71,7 +72,7 @@ public class IMSAuthenticateRestCallbackHandler implements AuthenticateCallbackH
         IMSBearerTokenJwt token;
         try {
              token = OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer(tokenCode);
-        } catch (IOException e){
+        } catch (IMSRestException e){
             log.error("Null token passed at jaasConfig file");
             throw new IllegalArgumentException("Null token passed at jaasConfig file");
         }
