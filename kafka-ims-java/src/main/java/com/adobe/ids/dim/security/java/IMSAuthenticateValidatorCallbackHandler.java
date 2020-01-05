@@ -10,8 +10,8 @@
 package com.adobe.ids.dim.security.java;
 
 import com.adobe.ids.dim.security.common.exception.IMSValidatorException;
+import com.adobe.ids.dim.security.util.StringsUtil;
 import metrics.OAuthMetricsValidator;
-import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerExtensionsValidatorCallback;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule;
@@ -32,29 +32,34 @@ import java.lang.management.ManagementFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import com.adobe.ids.dim.security.common.*;
 
 public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCallbackHandler {
     private final Logger log = LoggerFactory.getLogger(IMSAuthenticateValidatorCallbackHandler.class);
+
+    public static final String IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG = "ims.token.validation.url";
     private Map < String, String > moduleOptions = null;
     private boolean configured = false;
     private Time time = Time.SYSTEM;
 
     //Allowed scopes
+
     private static final String DIM_CORE_SCOPE = "dim.core.services";
 
     @Override
     public void configure(Map < String, ? > map, String saslMechanism, List < AppConfigurationEntry > jaasConfigEntries) {
         if (!OAuthBearerLoginModule.OAUTHBEARER_MECHANISM.equals(saslMechanism))
             throw new IllegalArgumentException(String.format("Unexpected SASL mechanism: %s", saslMechanism));
-        if (Objects.requireNonNull(jaasConfigEntries).size() < 1 || jaasConfigEntries.get(0) == null)
-            throw new IllegalArgumentException(
-                    String.format("Must supply exactly 1 non-null JAAS mechanism configuration (size was %d)",
-                            jaasConfigEntries.size()));
+
         this.moduleOptions = Collections.unmodifiableMap((Map < String, String > ) jaasConfigEntries.get(0).getOptions());
+
+        if (!moduleOptions.containsKey(IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG) ||
+                StringsUtil.isNullOrEmpty(moduleOptions.get(IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG))) {
+            throw new IllegalArgumentException("Missing " + IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG + " in jaas config.");
+        }
+
         configured = true;
         registerMetrics();
     }
