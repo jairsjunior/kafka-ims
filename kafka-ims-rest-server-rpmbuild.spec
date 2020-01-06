@@ -29,11 +29,6 @@ if [ "$RPM_BUILD_ROOT" != "/" ]; then
     rm -rf "$RPM_BUILD_ROOT"
 fi
 
-%build
-cd -
-export JAVA_HOME=/usr/lib/jvm/java
-mvn -e package -DskipTests=true
-
 %install
 cd -
 install -d "$RPM_BUILD_ROOT"%{install_path}
