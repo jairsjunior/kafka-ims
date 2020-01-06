@@ -10,11 +10,13 @@
 package com.adobe.ids.dim.security.java;
 
 import com.adobe.ids.dim.security.common.exception.IMSValidatorException;
-import metrics.OAuthMetricsValidator;
-import org.apache.kafka.common.KafkaException;
+import com.adobe.ids.dim.security.util.StringsUtil;
+import com.adobe.ids.dim.security.metrics.OAuthMetricsValidator;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
+import org.apache.kafka.common.security.oauthbearer.OAuthBearerExtensionsValidatorCallback;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerValidatorCallback;
+import org.apache.kafka.common.security.oauthbearer.internals.unsecured.OAuthBearerIllegalTokenException;
 import org.apache.kafka.common.security.oauthbearer.internals.unsecured.OAuthBearerValidationResult;
 import org.apache.kafka.common.utils.Time;
 import org.slf4j.Logger;
@@ -30,29 +32,34 @@ import java.lang.management.ManagementFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import com.adobe.ids.dim.security.common.*;
 
 public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCallbackHandler {
     private final Logger log = LoggerFactory.getLogger(IMSAuthenticateValidatorCallbackHandler.class);
+
+    public static final String IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG = "ims.token.validation.url";
     private Map < String, String > moduleOptions = null;
     private boolean configured = false;
     private Time time = Time.SYSTEM;
 
     //Allowed scopes
+
     private static final String DIM_CORE_SCOPE = "dim.core.services";
 
     @Override
     public void configure(Map < String, ? > map, String saslMechanism, List < AppConfigurationEntry > jaasConfigEntries) {
         if (!OAuthBearerLoginModule.OAUTHBEARER_MECHANISM.equals(saslMechanism))
             throw new IllegalArgumentException(String.format("Unexpected SASL mechanism: %s", saslMechanism));
-        if (Objects.requireNonNull(jaasConfigEntries).size() < 1 || jaasConfigEntries.get(0) == null)
-            throw new IllegalArgumentException(
-                    String.format("Must supply exactly 1 non-null JAAS mechanism configuration (size was %d)",
-                            jaasConfigEntries.size()));
+
         this.moduleOptions = Collections.unmodifiableMap((Map < String, String > ) jaasConfigEntries.get(0).getOptions());
+
+        if (!moduleOptions.containsKey(IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG) ||
+                StringsUtil.isNullOrEmpty(moduleOptions.get(IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG))) {
+            throw new IllegalArgumentException("Missing " + IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG + " in jaas config.");
+        }
+
         configured = true;
         registerMetrics();
     }
@@ -80,13 +87,16 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
             throw new IllegalStateException("Callback handler not configured");
         for (Callback callback: callbacks) {
             if (callback instanceof OAuthBearerValidatorCallback){
-                OAuthBearerValidatorCallback validationCallback;
+                OAuthBearerValidatorCallback validationCallback = (OAuthBearerValidatorCallback) callback;
                 try {
-                    validationCallback = (OAuthBearerValidatorCallback) callback;
-                } catch (KafkaException e) {
-                    throw new IOException(e.getMessage(), e);
+                    handleCallback(validationCallback);
+                } catch (OAuthBearerIllegalTokenException e) {
+                    OAuthBearerValidationResult failureReason = e.reason();
+                    validationCallback.error(failureReason.failureDescription(), failureReason.failureScope(), failureReason.failureOpenIdConfig());
                 }
-                handleCallback(validationCallback);
+            } else if (callback instanceof OAuthBearerExtensionsValidatorCallback) {
+                OAuthBearerExtensionsValidatorCallback extensionsCallback = (OAuthBearerExtensionsValidatorCallback) callback;
+                extensionsCallback.inputExtensions().map().forEach((extensionName, v) -> extensionsCallback.valid(extensionName));
             } else {
                 throw new UnsupportedCallbackException(callback);
             }
@@ -115,12 +125,11 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
         Set<String> scopes = token.scope();
 
         if (!scopes.contains(DIM_CORE_SCOPE)) {
-            OAuthMetricsValidator.getInstance().incCountOfRequestsFailedWithoutACL();
+            OAuthMetricsValidator.getInstance().incCountOfRequestsFailedWithoutScope();
             log.debug("Token doesn't have required scopes! We cannot accept this token");
             log.debug("Required scope is: {}", DIM_CORE_SCOPE);
             log.debug("Token has following scopes: {}", scopes);
-            throw new IMSValidatorException(IMSValidatorException.KAFKA_EXCEPTION_WITHOUT_SCOPE_MSG);
-//            OAuthBearerValidationResult.newFailure("Required scope missing").throwExceptionIfFailed();
+            OAuthBearerValidationResult.newFailure(IMSValidatorException.KAFKA_EXCEPTION_WITHOUT_SCOPE_MSG, DIM_CORE_SCOPE, "").throwExceptionIfFailed();
         }
 
         log.debug("Validated IMS Token: {}", token.toString());

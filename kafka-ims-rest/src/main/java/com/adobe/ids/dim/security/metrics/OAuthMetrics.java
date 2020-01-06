@@ -14,17 +14,17 @@ public class OAuthMetrics implements OAuthMetricsMBean {
     }
 
     @Override
-    public Integer getCountOfRequestSuccess() {
+    public Integer getSuccessfullRequestCount() {
         return countOfRequestSuccess;
     }
 
     @Override
-    public Integer getCountOfRequestFailedInvalidToken() {
+    public Integer getInvalidTokenErrorCount() {
         return countOfRequestFailedInvalidToken;
     }
 
     @Override
-    public Integer getCountOfRequestFailedExpiredToken() {
+    public Integer getExpiredTokenErrorCount() {
         return countOfRequestFailedExpiredToken;
     }
 

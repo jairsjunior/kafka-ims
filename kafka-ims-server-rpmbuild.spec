@@ -29,10 +29,11 @@ if [ "$RPM_BUILD_ROOT" != "/" ]; then
     rm -rf "$RPM_BUILD_ROOT"
 fi
 
-%build
-cd -
-export JAVA_HOME=/usr/lib/jvm/java
-mvn -e package -DskipTests=true
+#We expect to build the libraries from command line, before packaging
+#%build
+#cd -
+#export JAVA_HOME=/usr/lib/jvm/java
+#mvn -e package 
 
 %install
 cd -

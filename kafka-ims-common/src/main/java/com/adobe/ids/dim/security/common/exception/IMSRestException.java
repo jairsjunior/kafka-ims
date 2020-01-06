@@ -13,16 +13,18 @@ import io.confluent.rest.exceptions.RestNotAuthorizedException;
 
 public class IMSRestException extends RestNotAuthorizedException {
 
-    public static String BEARER_TOKEN_NOT_SENT_MSG = "Authorization Bearer token not sent";
+    public static String BEARER_TOKEN_NOT_SENT_MSG = "Authorization Bearer Token not sent";
     public static int BEARER_TOKEN_NOT_SENT_CODE = 40002;
     public static String BEARER_INVALID_TOKEN_MSG = "Invalid Token";
     public static int BEARER_INVALID_TOKEN_CODE = 40003;
-    public static String BEARER_SENT_NOT_STARTING_WITH_PREFIX_MSG = "Authorization Bearer sent not starting with ";
+    public static String BEARER_SENT_NOT_STARTING_WITH_PREFIX_MSG = "Authorization Bearer Token does not start with ";
     public static int BEARER_SENT_NOT_STARTING_WITH_PREFIX_CODE = 40004;
-    public static String BEARER_TOKEN_EXPIRED_MSG = "Bearer token is expired";
+    public static String BEARER_TOKEN_EXPIRED_MSG = "Bearer token has expired";
     public static int BEARER_TOKEN_EXPIRED_CODE = 40005;
     public static String BEARER_IS_NOT_INSTANCE_IMS_JWT_MSG = "Principal is not a instance of IMSBearerTokenJwt";
     public static int BEARER_IS_NOT_INSTANCE_IMS_JWT_CODE = 40006;
+    public static String REST_CONFIGURATION_ERROR_MSG = "Problem creating REST config object: ";
+    public static int REST_CONFIGURATION_ERROR_CODE = 40007;
 
     public IMSRestException(int errCode, String message) {
         super("Error Code: " + String.valueOf(errCode) +", Error Message: " + message, errCode);

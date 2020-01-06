@@ -40,6 +40,18 @@ public class KafkaOAuthRestContextFactory {
         return this.userToContextMap.get(principalWithResourceType);
     }
 
+    public void cleanSpecificContext(String principalName) {
+        log.info("Clean specific context with the principal name: " + principalName);
+        try{
+            if (this.userToContextMap.containsKey(principalName)){
+                this.userToContextMap.remove(principalName).shutdown();
+                log.info("Cleared context: " + principalName);
+            }
+        }catch (Exception e){
+            log.warn("This context no longer exists");
+        }
+    }
+
     public void clean() {
         log.debug("KafkaOAuthRestContextFactory -- clean");
         for (final KafkaRestContext context : this.userToContextMap.values()) {

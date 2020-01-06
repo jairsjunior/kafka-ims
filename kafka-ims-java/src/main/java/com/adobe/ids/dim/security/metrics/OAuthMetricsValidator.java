@@ -1,21 +1,21 @@
-package metrics;
+package com.adobe.ids.dim.security.metrics;
 
 public class OAuthMetricsValidator implements OAuthMetricsValidatorMBean {
 
     private static OAuthMetricsValidator oAuthMetrics;
-    private Integer countOfRequestFailedWithoutACL;
+    private Integer countOfRequestFailedWithoutScope;
 
     public OAuthMetricsValidator(){
-        this.countOfRequestFailedWithoutACL = 0;
+        this.countOfRequestFailedWithoutScope = 0;
     }
 
     @Override
-    public Integer getCountOfRequestFailedWithoutACL() {
-        return countOfRequestFailedWithoutACL;
+    public Integer getCountOfRequestFailedWithoutScope() {
+        return countOfRequestFailedWithoutScope;
     }
 
-    public void incCountOfRequestsFailedWithoutACL(){
-        this.countOfRequestFailedWithoutACL++;
+    public void incCountOfRequestsFailedWithoutScope(){
+        this.countOfRequestFailedWithoutScope++;
     }
 
     public static OAuthMetricsValidator getInstance(){

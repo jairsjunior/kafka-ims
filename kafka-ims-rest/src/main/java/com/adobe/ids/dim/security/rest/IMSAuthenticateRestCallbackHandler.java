@@ -1,7 +1,9 @@
 package com.adobe.ids.dim.security.rest;
 
 import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
+import com.adobe.ids.dim.security.common.exception.IMSRestException;
 import com.adobe.ids.dim.security.util.OAuthRestProxyUtil;
+import com.adobe.ids.dim.security.util.StringsUtil;
 import kafka.common.KafkaException;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule;
@@ -24,14 +26,14 @@ public class IMSAuthenticateRestCallbackHandler implements AuthenticateCallbackH
     private boolean configured = false;
 
     @Override
-    public void configure(Map<String, ?> map, String s, List<AppConfigurationEntry> list) {
-        if (!OAuthBearerLoginModule.OAUTHBEARER_MECHANISM.equals(s))
-            throw new IllegalArgumentException(String.format("Unexpected SASL mechanism: %s", s));
-        if (Objects.requireNonNull(list).size() < 1 || list.get(0) == null)
+    public void configure(Map<String, ?> map, String saslMechanism, List<AppConfigurationEntry> jaasConfigEntries) {
+        if (!OAuthBearerLoginModule.OAUTHBEARER_MECHANISM.equals(saslMechanism))
+            throw new IllegalArgumentException(String.format("Unexpected SASL mechanism: %s", saslMechanism));
+        if (Objects.requireNonNull(jaasConfigEntries).size() < 1 || jaasConfigEntries.get(0) == null)
             throw new IllegalArgumentException(
                     String.format("Must supply exactly 1 non-null JAAS mechanism configuration (size was %d)",
-                            list.size()));
-        this.moduleOptions = Collections.unmodifiableMap((Map < String, String > ) list.get(0).getOptions());
+                            jaasConfigEntries.size()));
+        this.moduleOptions = Collections.unmodifiableMap((Map < String, String > ) jaasConfigEntries.get(0).getOptions());
         configured = true;
     }
 
@@ -66,14 +68,14 @@ public class IMSAuthenticateRestCallbackHandler implements AuthenticateCallbackH
 
         String tokenCode = moduleOptions.get("ims.access.token");
         if(tokenCode == null){
-            throw new IllegalArgumentException("Null token passed at jaasConfig file");
+            throw new IllegalArgumentException("Null token passed in JAAS config file");
         }
         IMSBearerTokenJwt token;
         try {
              token = OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer(tokenCode);
-        } catch (IOException e){
-            log.error("Null token passed at jaasConfig file");
-            throw new IllegalArgumentException("Null token passed at jaasConfig file");
+        } catch (IMSRestException e){
+            log.error("Null token passed in JAAS config file");
+            throw new IllegalArgumentException("Null token passed in JAAS config file");
         }
 
         log.debug("Jaas file IMS Token: {}", tokenCode);
