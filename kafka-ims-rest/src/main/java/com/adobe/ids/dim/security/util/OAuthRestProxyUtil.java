@@ -33,7 +33,7 @@ public class OAuthRestProxyUtil {
             Map < String, Object > payloadJson = objectMapper.readValue(payLoad, new TypeReference<Map<String, Object>>(){});
             token = new IMSBearerTokenJwt(payloadJson, accessToken);
         } catch (IOException e) {
-            log.info("Cannot parse the token. Invalid Token sended!");
+            log.info("Cannot parse the token. Invalid Token sent!");
             OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
             throw new IMSRestException(IMSRestException.BEARER_INVALID_TOKEN_CODE, IMSRestException.BEARER_INVALID_TOKEN_MSG);
         }
@@ -62,7 +62,7 @@ public class OAuthRestProxyUtil {
             String bearer = authorizationHeader.substring(AUTHENTICATION_PREFIX.length()).trim();
             return OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer(bearer);
         }else{
-            log.info("Invalid Token sended!");
+            log.info("Invalid Token sent!");
             OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
             throw new IMSRestException(IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_CODE, IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_MSG + AUTHENTICATION_PREFIX);
         }

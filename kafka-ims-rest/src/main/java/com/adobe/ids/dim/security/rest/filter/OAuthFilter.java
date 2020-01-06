@@ -55,7 +55,7 @@ public class OAuthFilter implements ContainerRequestFilter {
         if (principal instanceof IMSBearerTokenJwt) {
             log.debug("principal is instance of IMSBearerTokenJwt");
             if(!OAuthRestProxyUtil.validateExpiration(principal)){
-                log.info("Bearer token is expired!");
+                log.info("Bearer token has expired!");
                 OAuthMetrics.getInstance().incCountOfRequestsFailedExpiredToken();
                 throw new IMSRestException(IMSRestException.BEARER_TOKEN_EXPIRED_CODE, IMSRestException.BEARER_TOKEN_EXPIRED_MSG);
             }
@@ -68,15 +68,14 @@ public class OAuthFilter implements ContainerRequestFilter {
                 throw new IMSRestException(IMSRestException.REST_CONFIGURATION_ERROR_CODE, IMSRestException.REST_CONFIGURATION_ERROR_MSG + e.getMessage());
             }
             log.debug("Get context using Factory");
-            log.info("Get Context Instance");
             context = KafkaOAuthRestContextFactory.getInstance().getContext(principal, bearerTokenKafkaRestConfig, resourceType, true);
         } else {
-            log.info("Exception catched invalid token!!!");
+            log.info("Invalid token!");
             OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
-            log.debug("principal is not a instance of IMSBearerTokenJwt");
+            log.debug("Principal is not a instance of IMSBearerTokenJwt");
             throw new IMSRestException(IMSRestException.BEARER_IS_NOT_INSTANCE_IMS_JWT_CODE, IMSRestException.BEARER_IS_NOT_INSTANCE_IMS_JWT_MSG);
         }
-        log.info("context: " + context.toString());
+        log.debug("context: " + context.toString());
         return context;
     }
 

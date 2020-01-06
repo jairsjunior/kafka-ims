@@ -27,16 +27,15 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
 
     @Override
     public void filter(ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext) throws IOException {
-        log.info("Status Response: " + containerResponseContext.getStatus());
-        log.info("Entity Response: " + containerResponseContext.getEntity().toString());
+        log.debug("Status Response: " + containerResponseContext.getStatus());
+        log.debug("Entity Response: " + containerResponseContext.getEntity().toString());
 
-        if(containerResponseContext.getStatusInfo().getFamily().equals(Response.Status.Family.SUCCESSFUL)){
-            log.info("Status Sucessfully");
+        if(containerResponseContext.getStatusInfo().getFamily().equals(Response.Status.Family.SUCCESSFUL)) {
             OAuthMetrics.getInstance().incCountOfRequestSuccess();
-        }else{
+        } else {
             switch (containerResponseContext.getStatus()) {
                 case 401 : {
-                    log.info("Authentication error! Clearing this Principal Context");
+                    log.debug("Authentication error! Clearing this Principal Context");
                     if (!(containerResponseContext.getEntity() instanceof ErrorMessage)){
                         cleanContextOfPrincipal(containerRequestContext);
                         //Testing Dynamically JMX Metrics Creation
@@ -47,7 +46,7 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
                     }
                 } break;
                 case 403 : {
-                    log.info("Authorization error! - Add JMX Metrics..");
+                    log.debug("Authorization error! - Add JMX Metrics..");
                 }
             }
         }

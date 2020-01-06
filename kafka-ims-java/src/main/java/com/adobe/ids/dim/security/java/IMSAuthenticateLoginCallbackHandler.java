@@ -87,7 +87,7 @@ public class IMSAuthenticateLoginCallbackHandler implements AuthenticateCallback
         for (Callback callback: callbacks) {
             if (callback instanceof OAuthBearerTokenCallback){
                 try {
-                    log.debug("callback is a instance of OAuthBearerTokenCallback");
+                    log.debug("callback is an instance of OAuthBearerTokenCallback");
                     handleCallback((OAuthBearerTokenCallback) callback);
                 } catch (KafkaException e) {
                     log.debug("on handleCallback");

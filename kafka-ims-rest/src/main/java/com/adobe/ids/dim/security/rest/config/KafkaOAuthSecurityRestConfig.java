@@ -22,7 +22,7 @@ public final class KafkaOAuthSecurityRestConfig extends KafkaRestConfig {
         log.debug("KafkaOAuthSecurityRestConfig -- Constructor ");
         this.jwtToken = jwtToken;
         if(this.jwtToken != null){
-            log.debug("JwtToken: ", jwtToken.toString());
+            log.debug("JWT: ", jwtToken.toString());
         }
     }
 
@@ -42,7 +42,7 @@ public final class KafkaOAuthSecurityRestConfig extends KafkaRestConfig {
         log.debug("KafkaOAuthSecurityRestConfig -- getConsumerProperties ");
         Properties originalProps = super.getConsumerProperties();
         if (this.jwtToken != null) {
-            log.debug("----> JWT Token not null <----");
+            log.debug("----> JWT not null <----");
             originalProps = getTokenClientProps(originalProps);
         }
         log.debug("originalProps: " + originalProps.toString());
@@ -54,7 +54,7 @@ public final class KafkaOAuthSecurityRestConfig extends KafkaRestConfig {
         log.debug("KafkaOAuthSecurityRestConfig -- getAdminProperties ");
         Properties originalProps = super.getAdminProperties();
         if (this.jwtToken != null) {
-            log.debug("----> JWT Token not null <----");
+            log.debug("----> JWT not null <----");
             originalProps = getTokenClientProps(originalProps);
         }
         log.debug("originalProps: " + originalProps.toString());
