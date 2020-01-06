@@ -33,6 +33,7 @@ public class OAuthRestProxyUtil {
             Map < String, Object > payloadJson = objectMapper.readValue(payLoad, new TypeReference<Map<String, Object>>(){});
             token = new IMSBearerTokenJwt(payloadJson, accessToken);
         } catch (IOException e) {
+            log.info("Cannot parse the token. Invalid Token sended!");
             OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
             throw new IMSRestException(IMSRestException.BEARER_INVALID_TOKEN_CODE, IMSRestException.BEARER_INVALID_TOKEN_MSG);
         }
@@ -53,6 +54,7 @@ public class OAuthRestProxyUtil {
     public static IMSBearerTokenJwt getBearerInformation(ContainerRequestContext containerRequestContext) throws IMSRestException{
         String authorizationHeader = containerRequestContext.getHeaderString("Authorization");
         if(authorizationHeader == null){
+            log.info("Authorization token is null");
             OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
             throw new IMSRestException(IMSRestException.BEARER_TOKEN_NOT_SENT_CODE, IMSRestException.BEARER_TOKEN_NOT_SENT_MSG);
         }
@@ -60,6 +62,7 @@ public class OAuthRestProxyUtil {
             String bearer = authorizationHeader.substring(AUTHENTICATION_PREFIX.length()).trim();
             return OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer(bearer);
         }else{
+            log.info("Invalid Token sended!");
             OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
             throw new IMSRestException(IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_CODE, IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_MSG + AUTHENTICATION_PREFIX);
         }
