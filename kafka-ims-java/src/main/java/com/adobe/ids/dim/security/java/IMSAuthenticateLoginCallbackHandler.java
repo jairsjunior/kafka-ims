@@ -72,6 +72,10 @@ public class IMSAuthenticateLoginCallbackHandler implements AuthenticateCallback
         return this.configured;
     }
 
+    public void setConfigured(boolean configured) {
+        this.configured = configured;
+    }
+
     @Override
     public void close() {}
 
