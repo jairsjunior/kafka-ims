@@ -1,4 +1,4 @@
-package com.adobe.ids.dim.security.util;
+package com.adobe.ids.dim.security.common;
 
 public class StringsUtil {
 

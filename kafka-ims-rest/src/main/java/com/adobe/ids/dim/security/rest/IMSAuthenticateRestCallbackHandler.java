@@ -3,7 +3,7 @@ package com.adobe.ids.dim.security.rest;
 import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
 import com.adobe.ids.dim.security.common.exception.IMSRestException;
 import com.adobe.ids.dim.security.util.OAuthRestProxyUtil;
-import com.adobe.ids.dim.security.util.StringsUtil;
+import com.adobe.ids.dim.security.common.StringsUtil;
 import kafka.common.KafkaException;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule;
@@ -18,9 +18,11 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class IMSAuthenticateRestCallbackHandler implements AuthenticateCallbackHandler {
+
+    public static final String IMS_ACCESS_TOKEN_CONFIG = "ims.access.token";
+
     private final Logger log = LoggerFactory.getLogger(IMSAuthenticateRestCallbackHandler.class);
     private Map < String, String > moduleOptions = null;
     private boolean configured = false;
@@ -29,11 +31,17 @@ public class IMSAuthenticateRestCallbackHandler implements AuthenticateCallbackH
     public void configure(Map<String, ?> map, String saslMechanism, List<AppConfigurationEntry> jaasConfigEntries) {
         if (!OAuthBearerLoginModule.OAUTHBEARER_MECHANISM.equals(saslMechanism))
             throw new IllegalArgumentException(String.format("Unexpected SASL mechanism: %s", saslMechanism));
-        if (Objects.requireNonNull(jaasConfigEntries).size() < 1 || jaasConfigEntries.get(0) == null)
+        if (jaasConfigEntries.get(0) == null)
             throw new IllegalArgumentException(
-                    String.format("Must supply exactly 1 non-null JAAS mechanism configuration (size was %d)",
+                    String.format("Must supply at least 1 non-null JAAS mechanism configuration (size was %d)",
                             jaasConfigEntries.size()));
         this.moduleOptions = Collections.unmodifiableMap((Map < String, String > ) jaasConfigEntries.get(0).getOptions());
+
+        if (!moduleOptions.containsKey(IMS_ACCESS_TOKEN_CONFIG) ||
+                StringsUtil.isNullOrEmpty(moduleOptions.get(IMS_ACCESS_TOKEN_CONFIG))) {
+            throw new IllegalArgumentException("Missing " + IMS_ACCESS_TOKEN_CONFIG + " in jaas config.");
+        }
+
         configured = true;
     }
 

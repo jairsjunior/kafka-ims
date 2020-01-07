@@ -28,6 +28,7 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
     @Override
     public void filter(ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext) throws IOException {
         log.debug("Status Response: " + containerResponseContext.getStatus());
+
         log.debug("Entity Response: " + containerResponseContext.getEntity().toString());
 
         if(containerResponseContext.getStatusInfo().getFamily().equals(Response.Status.Family.SUCCESSFUL)) {

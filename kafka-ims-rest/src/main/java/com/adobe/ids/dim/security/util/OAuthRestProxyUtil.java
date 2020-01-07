@@ -24,11 +24,11 @@ public class OAuthRestProxyUtil {
 
     public static IMSBearerTokenJwt getIMSBearerTokenJwtFromBearer(String accessToken) throws IMSRestException {
         IMSBearerTokenJwt token = null;
-        // Get client_id from the token
-        String[] tokenString = accessToken.split("\\.");
-        Base64.Decoder decoder = Base64.getUrlDecoder();
-        String payLoad = new String(decoder.decode(tokenString[1]));
         try {
+            // Get client_id from the token
+            String[] tokenString = accessToken.split("\\.");
+            Base64.Decoder decoder = Base64.getUrlDecoder();
+            String payLoad = new String(decoder.decode(tokenString[1]));
             ObjectMapper objectMapper = new ObjectMapper();
             Map < String, Object > payloadJson = objectMapper.readValue(payLoad, new TypeReference<Map<String, Object>>(){});
             token = new IMSBearerTokenJwt(payloadJson, accessToken);

@@ -10,7 +10,7 @@
 package com.adobe.ids.dim.security.java;
 
 import com.adobe.ids.dim.security.common.exception.IMSValidatorException;
-import com.adobe.ids.dim.security.util.StringsUtil;
+import com.adobe.ids.dim.security.common.StringsUtil;
 import com.adobe.ids.dim.security.metrics.OAuthMetricsValidator;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerExtensionsValidatorCallback;

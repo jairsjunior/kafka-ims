@@ -1,6 +1,6 @@
 package com.adobe.ids.dim.security.java;
 
-import com.adobe.ids.dim.security.util.StringsUtil;
+import com.adobe.ids.dim.security.common.StringsUtil;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule;
