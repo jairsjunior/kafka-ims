@@ -68,6 +68,11 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
         return this.configured;
     }
 
+
+    public void setConfigured(boolean configured) {
+        this.configured = configured;
+    }
+
     @Override
     public void close() {}
 
