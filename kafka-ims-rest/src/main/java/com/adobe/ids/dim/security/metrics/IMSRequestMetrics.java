@@ -1,16 +1,17 @@
 package com.adobe.ids.dim.security.metrics;
 
-public class OAuthMetrics implements OAuthMetricsMBean {
+public class IMSRequestMetrics implements IMSRequestMetricsMBean {
 
-    private static OAuthMetrics oAuthMetrics;
     private Integer countOfRequestSuccess;
     private Integer countOfRequestFailedInvalidToken;
     private Integer countOfRequestFailedExpiredToken;
+    private Integer countOfRequestFailedWithoutScope;
 
-    public OAuthMetrics(){
+    public IMSRequestMetrics(){
         this.countOfRequestSuccess = 0;
         this.countOfRequestFailedInvalidToken = 0;
         this.countOfRequestFailedExpiredToken = 0;
+        this.countOfRequestFailedWithoutScope = 0;
     }
 
     @Override
@@ -28,6 +29,11 @@ public class OAuthMetrics implements OAuthMetricsMBean {
         return countOfRequestFailedExpiredToken;
     }
 
+    @Override
+    public Integer getWithoutScopeErrorCount() {
+        return countOfRequestFailedWithoutScope;
+    }
+
     public void incCountOfRequestSuccess(){
         this.countOfRequestSuccess++;
     }
@@ -36,15 +42,9 @@ public class OAuthMetrics implements OAuthMetricsMBean {
         this.countOfRequestFailedInvalidToken++;
     }
 
-    public void incCountOfRequestsFailedExpiredToken(){
-        this.countOfRequestFailedExpiredToken++;
-    }
+    public void incCountOfRequestsFailedExpiredToken(){ this.countOfRequestFailedExpiredToken++; }
 
-    public static OAuthMetrics getInstance(){
-        if(oAuthMetrics == null){
-            oAuthMetrics = new OAuthMetrics();
-        }
-        return oAuthMetrics;
-    }
+    public void incCountOfRequestsFailedWithoutScope() { this.countOfRequestFailedWithoutScope++; }
+
 
 }

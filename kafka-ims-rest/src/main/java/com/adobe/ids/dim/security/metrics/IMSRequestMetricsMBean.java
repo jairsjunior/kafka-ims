@@ -1,7 +1,9 @@
 package com.adobe.ids.dim.security.metrics;
 
-public interface OAuthMetricsMBean {
+public interface IMSRequestMetricsMBean {
     Integer getSuccessfullRequestCount();
     Integer getInvalidTokenErrorCount();
     Integer getExpiredTokenErrorCount();
+    Integer getWithoutScopeErrorCount();
+
 }

@@ -1,6 +1,5 @@
 package com.adobe.ids.dim.security.rest;
 
-import com.adobe.ids.dim.security.metrics.OAuthMetrics;
 import com.adobe.ids.dim.security.rest.config.KafkaOAuthSecurityRestConfig;
 import com.adobe.ids.dim.security.rest.context.KafkaOAuthRestContextFactory;
 import com.adobe.ids.dim.security.rest.filter.OAuthCleanerFilter;
@@ -11,10 +10,7 @@ import io.confluent.kafkarest.extension.RestResourceExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
 import javax.ws.rs.core.Configurable;
-import java.lang.management.ManagementFactory;
 
 public class KafkaOAuthSecurityRestResourceExtension implements RestResourceExtension {
 
@@ -29,10 +25,6 @@ public class KafkaOAuthSecurityRestResourceExtension implements RestResourceExte
             config.register(OAuthCleanerFilter.class);
             config.register(new OAuthResponseFilter());
 
-            //Register JMX Metrics
-            MBeanServer platformMBeanServer = ManagementFactory.getPlatformMBeanServer();
-            ObjectName objectName = new ObjectName("kafka.rest:name=ims-metrics");
-            platformMBeanServer.registerMBean(OAuthMetrics.getInstance(), objectName);
         }catch (Exception e){
             log.error("KafkaOAuthSecurityRestResourceExtension -- exception: ", e);
         }

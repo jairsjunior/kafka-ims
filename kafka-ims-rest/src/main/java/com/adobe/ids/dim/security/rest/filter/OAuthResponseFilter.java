@@ -2,10 +2,11 @@ package com.adobe.ids.dim.security.rest.filter;
 
 import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
 import com.adobe.ids.dim.security.common.exception.IMSRestException;
-import com.adobe.ids.dim.security.metrics.OAuthMetrics;
-import com.adobe.ids.dim.security.metrics.TestConfluentMetricsClass;
+import com.adobe.ids.dim.security.entity.RequestInfo;
+import com.adobe.ids.dim.security.metrics.IMSRestMetrics;
 import com.adobe.ids.dim.security.rest.context.KafkaOAuthRestContextFactory;
 import com.adobe.ids.dim.security.util.OAuthRestProxyUtil;
+import io.confluent.kafkarest.entities.ProduceResponse;
 import io.confluent.rest.entities.ErrorMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,33 +28,50 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
 
     @Override
     public void filter(ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext) throws IOException {
-        log.debug("Status Response: " + containerResponseContext.getStatus());
-        log.debug("Entity Response: " + containerResponseContext.getEntity().toString());
+        log.info("Status Response: " + containerResponseContext.getStatus());
+        if(containerResponseContext.hasEntity()){
+            log.info("Entity Response: " + containerResponseContext.getEntity().toString());
+        }
 
         if(containerResponseContext.getStatusInfo().getFamily().equals(Response.Status.Family.SUCCESSFUL)) {
-            OAuthMetrics.getInstance().incCountOfRequestSuccess();
+            IMSRestMetrics.getInstance().incSucessfull(containerRequestContext, resourceInfo);
         } else {
             switch (containerResponseContext.getStatus()) {
                 case 401 : {
-                    log.debug("Authentication error! Clearing this Principal Context");
+                    log.debug("Authentication error - Clearing this Principal Context");
                     if (!(containerResponseContext.getEntity() instanceof ErrorMessage)){
                         cleanContextOfPrincipal(containerRequestContext);
-                        //Testing Dynamically JMX Metrics Creation
-                        if(TestConfluentMetricsClass.getInstance().getSensor("test.response.sensor") == null ){
-                            TestConfluentMetricsClass.getInstance().addSensorCount("test.response.sensor", "ims-dynamically-test", "Description Of Metric", "topic", OAuthRestProxyUtil.mountResquestInfo(containerRequestContext, resourceInfo).getTopic());
-                        }
-                        TestConfluentMetricsClass.getInstance().getSensor("test.response.sensor").record();
+                        IMSRestMetrics.getInstance().incWithoutScope(containerRequestContext, resourceInfo);
                     }
                 } break;
                 case 403 : {
-                    log.debug("Authorization error! - Add JMX Metrics..");
+                    log.info("Authorization error! - Add JMX Metrics..");
+                    if(ProduceResponse.class.isInstance(containerResponseContext.getEntity())){
+                        log.info("403: Producer Response Class");
+                        generateMetricsForProducerWithoutAuthorization(containerRequestContext);
+                    }else if(ErrorMessage.class.isInstance(containerResponseContext.getEntity())){
+                        generateMetricsForErrorWithoutAuthorization(containerRequestContext, (ErrorMessage) containerResponseContext.getEntity());
+                    }else{
+                        log.info("Not mapped Class: " + containerResponseContext.getEntityClass().toString());
+                    }
                 }
             }
         }
     }
 
     private void cleanContextOfPrincipal(ContainerRequestContext context) throws IMSRestException {
-        IMSBearerTokenJwt token = OAuthRestProxyUtil.getBearerInformation(context);
+        IMSBearerTokenJwt token = OAuthRestProxyUtil.getBearerInformation(context, resourceInfo);
         KafkaOAuthRestContextFactory.getInstance().cleanSpecificContext(token.principalName());
     }
+
+    private void generateMetricsForProducerWithoutAuthorization(ContainerRequestContext context) {
+        RequestInfo req = OAuthRestProxyUtil.mountResquestInfo(context, resourceInfo, null);
+        IMSRestMetrics.getInstance().incACLDenied(context, resourceInfo, req.getTopics());
+    }
+
+    private void generateMetricsForErrorWithoutAuthorization(ContainerRequestContext context, ErrorMessage error) {
+        RequestInfo req = OAuthRestProxyUtil.mountResquestInfo(context, resourceInfo, error);
+        IMSRestMetrics.getInstance().incACLDenied(context, resourceInfo, req.getTopics());
+    }
+
 }
