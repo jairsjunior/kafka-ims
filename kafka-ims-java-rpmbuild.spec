@@ -2,7 +2,7 @@
 %define __jar_repack %{nil}
 %define install_path /usr/share/java/kafka
 
-Name: kafka-ims-client
+Name: kafka-ims-java
 Summary: IMS Plugin for Kafka Broker and Java Clients 
 Version: 1.0
 Release: 1
@@ -29,14 +29,22 @@ if [ "$RPM_BUILD_ROOT" != "/" ]; then
     rm -rf "$RPM_BUILD_ROOT"
 fi
 
+#We expect to build the libraries from command line, before packaging
+#%build
+#cd -
+#export JAVA_HOME=/usr/lib/jvm/java
+#mvn -e package 
+
 %install
 cd -
 install -d "$RPM_BUILD_ROOT"%{install_path}
-install kafka-ims-java/target/kafka-ims-java-%{version}-*jar-with-dependencies.jar "${RPM_BUILD_ROOT}"%{install_path}/%{name}-%{version}-%{release}.jar
+install `ls kafka-ims-java/target/kafka-ims-java-%{version}-*.jar |grep -v with` "${RPM_BUILD_ROOT}"%{install_path}/kafka-ims-java-%{version}-%{release}.jar
+install `ls kafka-ims-common/target/kafka-ims-common-%{version}-*.jar |grep -v with` "${RPM_BUILD_ROOT}"%{install_path}/kafka-ims-common-%{version}-%{release}.jar
 
 %files
 %defattr(0644, root,root)
-%{install_path}/%{name}-%{version}-%{release}.jar
+%{install_path}/kafka-ims-java-%{version}-%{release}.jar
+%{install_path}/kafka-ims-common-%{version}-%{release}.jar
 
 %clean
 if [ "$RPM_BUILD_ROOT" != "/" ]; then
