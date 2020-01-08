@@ -7,6 +7,7 @@ kafka-sasl-ims-handler.iml
 .project
 .settings/
 out/
+.vscode
 
 ### Maven ###
 target/

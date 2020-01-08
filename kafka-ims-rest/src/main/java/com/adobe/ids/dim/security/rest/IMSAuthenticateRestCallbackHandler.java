@@ -16,6 +16,7 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.AppConfigurationEntry;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,7 +25,7 @@ public class IMSAuthenticateRestCallbackHandler implements AuthenticateCallbackH
     public static final String IMS_ACCESS_TOKEN_CONFIG = "ims.access.token";
 
     private final Logger log = LoggerFactory.getLogger(IMSAuthenticateRestCallbackHandler.class);
-    private Map < String, String > moduleOptions = null;
+    private Map<String, String> moduleOptions = null;
     private boolean configured = false;
 
     @Override
@@ -49,16 +50,28 @@ public class IMSAuthenticateRestCallbackHandler implements AuthenticateCallbackH
         return this.configured;
     }
 
+    public void setConfigured(boolean configured) {
+        this.configured = configured;
+    }
+
+    public void setModuleOptions(String token) {
+        if (this.moduleOptions == null) {
+            this.moduleOptions = new HashMap<String, String>();
+        }
+        this.moduleOptions.put("ims.access.token", token);
+    }
+
     @Override
-    public void close() {}
+    public void close() {
+    }
 
     @Override
     public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
         if (!isConfigured())
             throw new IllegalStateException("Callback handler not configured");
 
-        for (Callback callback: callbacks) {
-            if (callback instanceof OAuthBearerTokenCallback){
+        for (Callback callback : callbacks) {
+            if (callback instanceof OAuthBearerTokenCallback) {
                 try {
                     handleCallback((OAuthBearerTokenCallback) callback);
                 } catch (KafkaException e) {
@@ -75,13 +88,13 @@ public class IMSAuthenticateRestCallbackHandler implements AuthenticateCallbackH
             throw new IllegalArgumentException("Callback had a token already");
 
         String tokenCode = moduleOptions.get("ims.access.token");
-        if(tokenCode == null){
+        if (tokenCode == null) {
             throw new IllegalArgumentException("Null token passed in JAAS config file");
         }
         IMSBearerTokenJwt token;
         try {
-             token = OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer(tokenCode);
-        } catch (IMSRestException e){
+            token = OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer(tokenCode);
+        } catch (IMSRestException e) {
             log.error("Null token passed in JAAS config file");
             throw new IllegalArgumentException("Null token passed in JAAS config file");
         }

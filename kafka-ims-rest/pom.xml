@@ -34,6 +34,7 @@
             <groupId>io.confluent</groupId>
             <artifactId>kafka-rest</artifactId>
             <version>${kafka.rest.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

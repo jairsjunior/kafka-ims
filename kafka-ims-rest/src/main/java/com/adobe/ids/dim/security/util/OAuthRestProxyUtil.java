@@ -3,24 +3,45 @@ package com.adobe.ids.dim.security.util;
 import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
 import com.adobe.ids.dim.security.common.exception.IMSRestException;
 import com.adobe.ids.dim.security.entity.RequestInfo;
-import com.adobe.ids.dim.security.metrics.OAuthMetrics;
+import com.adobe.ids.dim.security.metrics.IMSRestMetrics;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.kafkarest.resources.v2.ConsumersResource;
+import io.confluent.rest.entities.ErrorMessage;
 import org.apache.kafka.common.utils.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
+import javax.ws.rs.core.Context;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class OAuthRestProxyUtil {
 
     private static final Logger log = LoggerFactory.getLogger(OAuthRestProxyUtil.class);
     private static final String AUTHENTICATION_PREFIX = "Bearer";
+
+    public static OAuthRestProxyUtil util;
+
+
+    public static OAuthRestProxyUtil getInstance(){
+        if(util == null){
+            util = new OAuthRestProxyUtil();
+        }
+        return util;
+    }
+
+    @Context
+    ResourceInfo resourceInfoTest;
+
+    private static Pattern pattern = Pattern.compile("\\[(.*)\\]");
 
     public static IMSBearerTokenJwt getIMSBearerTokenJwtFromBearer(String accessToken) throws IMSRestException {
         IMSBearerTokenJwt token = null;
@@ -32,9 +53,8 @@ public class OAuthRestProxyUtil {
             ObjectMapper objectMapper = new ObjectMapper();
             Map < String, Object > payloadJson = objectMapper.readValue(payLoad, new TypeReference<Map<String, Object>>(){});
             token = new IMSBearerTokenJwt(payloadJson, accessToken);
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.info("Cannot parse the token. Invalid Token sent!");
-            OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
             throw new IMSRestException(IMSRestException.BEARER_INVALID_TOKEN_CODE, IMSRestException.BEARER_INVALID_TOKEN_MSG);
         }
         return token;
@@ -51,21 +71,26 @@ public class OAuthRestProxyUtil {
         return token.scope().contains(requiredScope);
     }
 
-    public static IMSBearerTokenJwt getBearerInformation(ContainerRequestContext containerRequestContext) throws IMSRestException{
+    public static IMSBearerTokenJwt getBearerInformation(ContainerRequestContext containerRequestContext, ResourceInfo resourceInfo) throws IMSRestException{
         String authorizationHeader = containerRequestContext.getHeaderString("Authorization");
         if(authorizationHeader == null){
             log.info("Authorization token is null");
-            OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
+            IMSRestMetrics.getInstance().incInvalidToken(containerRequestContext, resourceInfo);
             throw new IMSRestException(IMSRestException.BEARER_TOKEN_NOT_SENT_CODE, IMSRestException.BEARER_TOKEN_NOT_SENT_MSG);
         }
         if (authorizationHeader.startsWith(AUTHENTICATION_PREFIX)) {
             String bearer = authorizationHeader.substring(AUTHENTICATION_PREFIX.length()).trim();
-            return OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer(bearer);
-        }else{
-            log.info("Invalid Token sent!");
-            OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
-            throw new IMSRestException(IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_CODE, IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_MSG + AUTHENTICATION_PREFIX);
+            try {
+                return OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer(bearer);
+            } catch (IMSRestException e) {
+                log.info("Invalid Token sent!");
+                IMSRestMetrics.getInstance().incInvalidToken(containerRequestContext, resourceInfo);
+                throw e;
+            }
         }
+        log.info("Invalid Token sent!");
+        IMSRestMetrics.getInstance().incInvalidToken(containerRequestContext, resourceInfo);
+        throw new IMSRestException(IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_CODE, IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_MSG + AUTHENTICATION_PREFIX);
     }
 
     public static String getResourceType(final ContainerRequestContext requestContext, ResourceInfo resourceInfo) {
@@ -87,12 +112,35 @@ public class OAuthRestProxyUtil {
         return path[path.length-1];
     }
 
-    public static RequestInfo mountResquestInfo(ContainerRequestContext context, ResourceInfo resourceInfo) {
-        String requestType = getResourceType(context, resourceInfo);
-        String topic = "";
-        if(requestType.equalsIgnoreCase("producer")){
-            topic = getTopicProducer(context);
+    public static List<String> extractTopicsFromErrors(String errorMessage){
+        List<String> results = new ArrayList<>();
+        Matcher matcher = pattern.matcher(errorMessage);
+        while (matcher.find()) {
+            String result = matcher.group(1);
+            if(result != null){
+                String[] topics = result.split(",");
+                for(String s : topics){
+                    if(!s.isEmpty()){
+                        results.add(s.trim());
+                    }
+                }
+                if(topics.length == 0){
+                    if(!result.isEmpty());
+                    results.add(result.trim());
+                }
+            }
         }
-        return new RequestInfo(requestType, topic);
+        return results;
+    }
+
+    public static RequestInfo mountResquestInfo(ContainerRequestContext context, ResourceInfo resourceInfo, ErrorMessage error) {
+        String requestType = getResourceType(context, resourceInfo);
+        List<String> topic = new ArrayList<>();
+        if(requestType.equalsIgnoreCase("producer")){
+            topic.add(getTopicProducer(context));
+        }else if (error != null) {
+            topic = extractTopicsFromErrors(error.getMessage());
+        }
+        return new RequestInfo(requestType, context.getUriInfo().getPath(), topic);
     }
 }

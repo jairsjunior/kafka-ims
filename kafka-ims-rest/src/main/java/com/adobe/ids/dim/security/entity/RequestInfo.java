@@ -1,22 +1,29 @@
 package com.adobe.ids.dim.security.entity;
 
 import javax.ws.rs.container.ContainerRequestContext;
+import java.util.List;
 
 public class RequestInfo {
 
     private String requestType;
-    private String topic;
+    private String endpoint;
+    private List<String> topics;
 
-    public RequestInfo(String requestType, String topic) {
+    public RequestInfo(String requestType, String endpoint, List<String> topics) {
         this.requestType = requestType;
-        this.topic = topic;
+        this.endpoint = endpoint;
+        this.topics = topics;
     }
 
     public String getRequestType() {
         return requestType;
     }
 
-    public String getTopic() {
-        return topic;
+    public List<String> getTopics() {
+        return topics;
+    }
+
+    public String getEndpoint(){
+        return endpoint;
     }
 }
