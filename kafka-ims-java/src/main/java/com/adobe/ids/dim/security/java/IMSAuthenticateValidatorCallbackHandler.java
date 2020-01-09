@@ -76,12 +76,12 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
     @Override
     public void close() {}
 
-    public void registerMetrics(){
-        try{
+    public void registerMetrics() {
+        try {
             MBeanServer platformMBeanServer = ManagementFactory.getPlatformMBeanServer();
             ObjectName objectName = new ObjectName("kafka-broker:name=ims-metrics");
             platformMBeanServer.registerMBean(OAuthMetricsValidator.getInstance(), objectName);
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("Error on register MBean Server for JMX metrics");
         }
     }
@@ -91,7 +91,7 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
         if (!isConfigured())
             throw new IllegalStateException("Callback handler not configured");
         for (Callback callback: callbacks) {
-            if (callback instanceof OAuthBearerValidatorCallback){
+            if (callback instanceof OAuthBearerValidatorCallback) {
                 OAuthBearerValidatorCallback validationCallback = (OAuthBearerValidatorCallback) callback;
                 try {
                     handleCallback(validationCallback);
@@ -109,7 +109,7 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
     }
 
     private void handleCallback(OAuthBearerValidatorCallback callback)
-            throws IllegalArgumentException {
+    throws IllegalArgumentException {
         String accessToken = callback.tokenValue();
         if (accessToken == null)
             throw new IllegalArgumentException("Callback missing required token value");

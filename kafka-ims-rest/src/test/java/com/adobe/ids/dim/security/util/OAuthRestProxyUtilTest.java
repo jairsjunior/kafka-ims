@@ -1,3 +1,12 @@
+/*
+ * ADOBE CONFIDENTIAL. Copyright 2019 Adobe Systems Incorporated. All Rights Reserved. NOTICE: All information contained
+ * herein is, and remains the property of Adobe Systems Incorporated and its suppliers, if any. The intellectual and
+ * technical concepts contained herein are proprietary to Adobe Systems Incorporated and its suppliers and are protected
+ * by all applicable intellectual property laws, including trade secret and copyright law. Dissemination of this
+ * information or reproduction of this material is strictly forbidden unless prior written permission is obtained
+ * from Adobe Systems Incorporated.
+ */
+
 package com.adobe.ids.dim.security.util;
 
 import com.adobe.ids.dim.security.common.exception.IMSRestException;
@@ -34,7 +43,7 @@ public class OAuthRestProxyUtilTest {
     }
 
     @Test
-    public void testExtractTopicsFromErrorMessageWithOneTopic(){
+    public void testExtractTopicsFromErrorMessageWithOneTopic() {
         List<String> topics = OAuthRestProxyUtil.extractTopicsFromErrors("Not authorized to access topics: [test-topic]");
         assertNotNull(topics);
         assertEquals(1, topics.size());
@@ -42,7 +51,7 @@ public class OAuthRestProxyUtilTest {
     }
 
     @Test
-    public void testExtractTopicsFromErrorMessageWithAnyTopics(){
+    public void testExtractTopicsFromErrorMessageWithAnyTopics() {
         List<String> topics = OAuthRestProxyUtil.extractTopicsFromErrors("Not authorized to access topics: [test-topic, test-topic-1,test-topic3 ,test-topic-4 , test-topic-5]");
         assertNotNull(topics);
         assertEquals(5, topics.size());

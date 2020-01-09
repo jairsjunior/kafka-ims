@@ -1,3 +1,12 @@
+/*
+ * ADOBE CONFIDENTIAL. Copyright 2019 Adobe Systems Incorporated. All Rights Reserved. NOTICE: All information contained
+ * herein is, and remains the property of Adobe Systems Incorporated and its suppliers, if any. The intellectual and
+ * technical concepts contained herein are proprietary to Adobe Systems Incorporated and its suppliers and are protected
+ * by all applicable intellectual property laws, including trade secret and copyright law. Dissemination of this
+ * information or reproduction of this material is strictly forbidden unless prior written permission is obtained
+ * from Adobe Systems Incorporated.
+ */
+
 package com.adobe.ids.dim.security.metrics;
 
 public class IMSRequestMetrics implements IMSRequestMetricsMBean {
@@ -7,7 +16,7 @@ public class IMSRequestMetrics implements IMSRequestMetricsMBean {
     private Integer countOfRequestFailedExpiredToken;
     private Integer countOfRequestFailedWithoutScope;
 
-    public IMSRequestMetrics(){
+    public IMSRequestMetrics() {
         this.countOfRequestSuccess = 0;
         this.countOfRequestFailedInvalidToken = 0;
         this.countOfRequestFailedExpiredToken = 0;
@@ -34,17 +43,21 @@ public class IMSRequestMetrics implements IMSRequestMetricsMBean {
         return countOfRequestFailedWithoutScope;
     }
 
-    public void incCountOfRequestSuccess(){
+    public void incCountOfRequestSuccess() {
         this.countOfRequestSuccess++;
     }
 
-    public void incCountOfRequestFailedInvalidToken(){
+    public void incCountOfRequestFailedInvalidToken() {
         this.countOfRequestFailedInvalidToken++;
     }
 
-    public void incCountOfRequestsFailedExpiredToken(){ this.countOfRequestFailedExpiredToken++; }
+    public void incCountOfRequestsFailedExpiredToken() {
+        this.countOfRequestFailedExpiredToken++;
+    }
 
-    public void incCountOfRequestsFailedWithoutScope() { this.countOfRequestFailedWithoutScope++; }
+    public void incCountOfRequestsFailedWithoutScope() {
+        this.countOfRequestFailedWithoutScope++;
+    }
 
 
 }

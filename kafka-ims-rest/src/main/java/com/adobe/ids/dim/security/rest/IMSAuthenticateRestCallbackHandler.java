@@ -1,3 +1,12 @@
+/*
+ * ADOBE CONFIDENTIAL. Copyright 2019 Adobe Systems Incorporated. All Rights Reserved. NOTICE: All information contained
+ * herein is, and remains the property of Adobe Systems Incorporated and its suppliers, if any. The intellectual and
+ * technical concepts contained herein are proprietary to Adobe Systems Incorporated and its suppliers and are protected
+ * by all applicable intellectual property laws, including trade secret and copyright law. Dissemination of this
+ * information or reproduction of this material is strictly forbidden unless prior written permission is obtained
+ * from Adobe Systems Incorporated.
+ */
+
 package com.adobe.ids.dim.security.rest;
 
 import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
@@ -34,8 +43,8 @@ public class IMSAuthenticateRestCallbackHandler implements AuthenticateCallbackH
             throw new IllegalArgumentException(String.format("Unexpected SASL mechanism: %s", saslMechanism));
         if (jaasConfigEntries.get(0) == null)
             throw new IllegalArgumentException(
-                    String.format("Must supply at least 1 non-null JAAS mechanism configuration (size was %d)",
-                            jaasConfigEntries.size()));
+                String.format("Must supply at least 1 non-null JAAS mechanism configuration (size was %d)",
+                              jaasConfigEntries.size()));
         this.moduleOptions = Collections.unmodifiableMap((Map < String, String > ) jaasConfigEntries.get(0).getOptions());
 
         if (!moduleOptions.containsKey(IMS_ACCESS_TOKEN_CONFIG) ||

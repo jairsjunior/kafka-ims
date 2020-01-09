@@ -1,3 +1,12 @@
+/*
+ * ADOBE CONFIDENTIAL. Copyright 2019 Adobe Systems Incorporated. All Rights Reserved. NOTICE: All information contained
+ * herein is, and remains the property of Adobe Systems Incorporated and its suppliers, if any. The intellectual and
+ * technical concepts contained herein are proprietary to Adobe Systems Incorporated and its suppliers and are protected
+ * by all applicable intellectual property laws, including trade secret and copyright law. Dissemination of this
+ * information or reproduction of this material is strictly forbidden unless prior written permission is obtained
+ * from Adobe Systems Incorporated.
+ */
+
 package com.adobe.ids.dim.security.rest.config;
 
 import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
@@ -21,7 +30,7 @@ public final class KafkaOAuthSecurityRestConfig extends KafkaRestConfig {
         super(KafkaOAuthSecurityRestConfig.configDef, props, new SystemTime());
         log.debug("KafkaOAuthSecurityRestConfig -- Constructor ");
         this.jwtToken = jwtToken;
-        if(this.jwtToken != null){
+        if(this.jwtToken != null) {
             log.debug("JWT: ", jwtToken.toString());
         }
     }
@@ -61,18 +70,18 @@ public final class KafkaOAuthSecurityRestConfig extends KafkaRestConfig {
         return originalProps;
     }
 
-    public Properties getTokenClientProps(Properties properties){
+    public Properties getTokenClientProps(Properties properties) {
         log.debug("KafkaOAuthSecurityRestConfig -- getTokenClientProps");
         Properties localProperties = new Properties();
-        for(Object key : this.getOriginalProperties().keySet()){
-            if (key.toString().startsWith("ims.rest.client.")){
+        for(Object key : this.getOriginalProperties().keySet()) {
+            if (key.toString().startsWith("ims.rest.client.")) {
                 localProperties.put(key.toString().replace("ims.rest.client.", ""), this.getOriginalProperties().get(key));
             }
         }
         if (this.getOriginalProperties().getProperty("client.sasl.mechanism") != null &&
                 this.getOriginalProperties().getProperty("client.sasl.mechanism").equalsIgnoreCase("OAUTHBEARER")) {
             localProperties.put("sasl.jaas.config", "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required  " +
-                    "ims.access.token=\"" + this.jwtToken.value() + "\";");
+                                "ims.access.token=\"" + this.jwtToken.value() + "\";");
         }
         log.debug("LocalProperties: " + localProperties.toString());
         properties.putAll(localProperties);
@@ -82,24 +91,24 @@ public final class KafkaOAuthSecurityRestConfig extends KafkaRestConfig {
 
     private static ConfigDef createBaseConfigDef() {
         return baseKafkaRestConfigDef()
-                .define(
-                        "ims.rest.client.sasl.mechanism",
-                        ConfigDef.Type.STRING,
-                        (Object)"",
-                        ConfigDef.Importance.LOW,
-                        "The mechanism that will be used at the client connections to the broker")
-                .define(
-                        "ims.rest.client.security.protocol",
-                        ConfigDef.Type.STRING,
-                        (Object)"",
-                        ConfigDef.Importance.LOW,
-                        "The security protocol that will be used at the client connections to the broker")
-                .define(
-                        "ims.rest.client.sasl.login.callback.handler.class",
-                        ConfigDef.Type.STRING,
-                        (Object)"",
-                        ConfigDef.Importance.LOW,
-                        "The SASL login callback handler class that will be used at the client connections to the broker")
-                ;
+               .define(
+                   "ims.rest.client.sasl.mechanism",
+                   ConfigDef.Type.STRING,
+                   (Object)"",
+                   ConfigDef.Importance.LOW,
+                   "The mechanism that will be used at the client connections to the broker")
+               .define(
+                   "ims.rest.client.security.protocol",
+                   ConfigDef.Type.STRING,
+                   (Object)"",
+                   ConfigDef.Importance.LOW,
+                   "The security protocol that will be used at the client connections to the broker")
+               .define(
+                   "ims.rest.client.sasl.login.callback.handler.class",
+                   ConfigDef.Type.STRING,
+                   (Object)"",
+                   ConfigDef.Importance.LOW,
+                   "The SASL login callback handler class that will be used at the client connections to the broker")
+               ;
     }
 }

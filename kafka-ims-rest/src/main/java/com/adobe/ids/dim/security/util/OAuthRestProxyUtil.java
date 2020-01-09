@@ -1,3 +1,12 @@
+/*
+ * ADOBE CONFIDENTIAL. Copyright 2019 Adobe Systems Incorporated. All Rights Reserved. NOTICE: All information contained
+ * herein is, and remains the property of Adobe Systems Incorporated and its suppliers, if any. The intellectual and
+ * technical concepts contained herein are proprietary to Adobe Systems Incorporated and its suppliers and are protected
+ * by all applicable intellectual property laws, including trade secret and copyright law. Dissemination of this
+ * information or reproduction of this material is strictly forbidden unless prior written permission is obtained
+ * from Adobe Systems Incorporated.
+ */
+
 package com.adobe.ids.dim.security.util;
 
 import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
@@ -31,8 +40,8 @@ public class OAuthRestProxyUtil {
     public static OAuthRestProxyUtil util;
 
 
-    public static OAuthRestProxyUtil getInstance(){
-        if(util == null){
+    public static OAuthRestProxyUtil getInstance() {
+        if(util == null) {
             util = new OAuthRestProxyUtil();
         }
         return util;
@@ -51,7 +60,7 @@ public class OAuthRestProxyUtil {
             Base64.Decoder decoder = Base64.getUrlDecoder();
             String payLoad = new String(decoder.decode(tokenString[1]));
             ObjectMapper objectMapper = new ObjectMapper();
-            Map < String, Object > payloadJson = objectMapper.readValue(payLoad, new TypeReference<Map<String, Object>>(){});
+            Map < String, Object > payloadJson = objectMapper.readValue(payLoad, new TypeReference<Map<String, Object>>() {});
             token = new IMSBearerTokenJwt(payloadJson, accessToken);
         } catch (Exception e) {
             log.info("Cannot parse the token. Invalid Token sent!");
@@ -64,16 +73,16 @@ public class OAuthRestProxyUtil {
         return token.lifetimeMs() > Time.SYSTEM.milliseconds();
     }
 
-    public static boolean validateRequiredScope(IMSBearerTokenJwt token, String requiredScope){
-        if(requiredScope == null){
+    public static boolean validateRequiredScope(IMSBearerTokenJwt token, String requiredScope) {
+        if(requiredScope == null) {
             throw new IMSRestException(IMSRestException.BEARER_INVALID_TOKEN_CODE, IMSRestException.BEARER_INVALID_TOKEN_MSG);
         }
         return token.scope().contains(requiredScope);
     }
 
-    public static IMSBearerTokenJwt getBearerInformation(ContainerRequestContext containerRequestContext, ResourceInfo resourceInfo) throws IMSRestException{
+    public static IMSBearerTokenJwt getBearerInformation(ContainerRequestContext containerRequestContext, ResourceInfo resourceInfo) throws IMSRestException {
         String authorizationHeader = containerRequestContext.getHeaderString("Authorization");
-        if(authorizationHeader == null){
+        if(authorizationHeader == null) {
             log.info("Authorization token is null");
             IMSRestMetrics.getInstance().incInvalidToken(containerRequestContext, resourceInfo);
             throw new IMSRestException(IMSRestException.BEARER_TOKEN_NOT_SENT_CODE, IMSRestException.BEARER_TOKEN_NOT_SENT_MSG);
@@ -112,19 +121,19 @@ public class OAuthRestProxyUtil {
         return path[path.length-1];
     }
 
-    public static List<String> extractTopicsFromErrors(String errorMessage){
+    public static List<String> extractTopicsFromErrors(String errorMessage) {
         List<String> results = new ArrayList<>();
         Matcher matcher = pattern.matcher(errorMessage);
         while (matcher.find()) {
             String result = matcher.group(1);
-            if(result != null){
+            if(result != null) {
                 String[] topics = result.split(",");
-                for(String s : topics){
-                    if(!s.isEmpty()){
+                for(String s : topics) {
+                    if(!s.isEmpty()) {
                         results.add(s.trim());
                     }
                 }
-                if(topics.length == 0){
+                if(topics.length == 0) {
                     if(!result.isEmpty());
                     results.add(result.trim());
                 }
@@ -136,9 +145,9 @@ public class OAuthRestProxyUtil {
     public static RequestInfo mountResquestInfo(ContainerRequestContext context, ResourceInfo resourceInfo, ErrorMessage error) {
         String requestType = getResourceType(context, resourceInfo);
         List<String> topic = new ArrayList<>();
-        if(requestType.equalsIgnoreCase("producer")){
+        if(requestType.equalsIgnoreCase("producer")) {
             topic.add(getTopicProducer(context));
-        }else if (error != null) {
+        } else if (error != null) {
             topic = extractTopicsFromErrors(error.getMessage());
         }
         return new RequestInfo(requestType, context.getUriInfo().getPath(), topic);

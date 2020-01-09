@@ -29,7 +29,7 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
     @Override
     public void filter(ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext) throws IOException {
         log.info("Status Response: " + containerResponseContext.getStatus());
-        if(containerResponseContext.hasEntity()){
+        if(containerResponseContext.hasEntity()) {
             log.info("Entity Response: " + containerResponseContext.getEntity().toString());
         }
 
@@ -37,24 +37,25 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
             IMSRestMetrics.getInstance().incSucessfull(containerRequestContext, resourceInfo);
         } else {
             switch (containerResponseContext.getStatus()) {
-                case 401 : {
-                    log.debug("Authentication error - Clearing this Principal Context");
-                    if (!(containerResponseContext.getEntity() instanceof ErrorMessage)){
-                        cleanContextOfPrincipal(containerRequestContext);
-                        IMSRestMetrics.getInstance().incWithoutScope(containerRequestContext, resourceInfo);
-                    }
-                } break;
-                case 403 : {
-                    log.info("Authorization error! - Add JMX Metrics..");
-                    if(ProduceResponse.class.isInstance(containerResponseContext.getEntity())){
-                        log.info("403: Producer Response Class");
-                        generateMetricsForProducerWithoutAuthorization(containerRequestContext);
-                    }else if(ErrorMessage.class.isInstance(containerResponseContext.getEntity())){
-                        generateMetricsForErrorWithoutAuthorization(containerRequestContext, (ErrorMessage) containerResponseContext.getEntity());
-                    }else{
-                        log.info("Not mapped Class: " + containerResponseContext.getEntityClass().toString());
-                    }
+            case 401 : {
+                log.debug("Authentication error - Clearing this Principal Context");
+                if (!(containerResponseContext.getEntity() instanceof ErrorMessage)) {
+                    cleanContextOfPrincipal(containerRequestContext);
+                    IMSRestMetrics.getInstance().incWithoutScope(containerRequestContext, resourceInfo);
                 }
+            }
+            break;
+            case 403 : {
+                log.info("Authorization error! - Add JMX Metrics..");
+                if(ProduceResponse.class.isInstance(containerResponseContext.getEntity())) {
+                    log.info("403: Producer Response Class");
+                    generateMetricsForProducerWithoutAuthorization(containerRequestContext);
+                } else if(ErrorMessage.class.isInstance(containerResponseContext.getEntity())) {
+                    generateMetricsForErrorWithoutAuthorization(containerRequestContext, (ErrorMessage) containerResponseContext.getEntity());
+                } else {
+                    log.info("Not mapped Class: " + containerResponseContext.getEntityClass().toString());
+                }
+            }
             }
         }
     }

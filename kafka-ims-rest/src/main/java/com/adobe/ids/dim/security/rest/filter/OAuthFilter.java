@@ -54,7 +54,7 @@ public class OAuthFilter implements ContainerRequestFilter {
         final KafkaOAuthSecurityRestConfig bearerTokenKafkaRestConfig;
         if (principal instanceof IMSBearerTokenJwt) {
             log.debug("principal is instance of IMSBearerTokenJwt");
-            if(!OAuthRestProxyUtil.validateExpiration(principal)){
+            if(!OAuthRestProxyUtil.validateExpiration(principal)) {
                 log.info("Bearer token has expired!");
                 IMSRestMetrics.getInstance().incExpiredToken(containerRequestContext, resourceInfo);
                 KafkaOAuthRestContextFactory.getInstance().cleanSpecificContext(principal.principalName());
