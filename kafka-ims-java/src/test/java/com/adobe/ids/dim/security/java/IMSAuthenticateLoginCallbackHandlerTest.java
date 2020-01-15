@@ -1,3 +1,12 @@
+/*
+ * ADOBE CONFIDENTIAL. Copyright 2019 Adobe Systems Incorporated. All Rights Reserved. NOTICE: All information contained
+ * herein is, and remains the property of Adobe Systems Incorporated and its suppliers, if any. The intellectual and
+ * technical concepts contained herein are proprietary to Adobe Systems Incorporated and its suppliers and are protected
+ * by all applicable intellectual property laws, including trade secret and copyright law. Dissemination of this
+ * information or reproduction of this material is strictly forbidden unless prior written permission is obtained
+ * from Adobe Systems Incorporated.
+ */
+
 package com.adobe.ids.dim.security.java;
 
 import static org.junit.Assert.assertNotNull;
@@ -23,11 +32,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ IMSHttpCalls.class })
+@PowerMockIgnore("jdk.internal.reflect.*")
 public class IMSAuthenticateLoginCallbackHandlerTest {
 
     IMSAuthenticateLoginCallbackHandler handler;
@@ -62,7 +73,7 @@ public class IMSAuthenticateLoginCallbackHandlerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void whenNullTokenPassed_thenIllegalArgumentExceptionIsThrown()
-            throws IOException, UnsupportedCallbackException {
+    throws IOException, UnsupportedCallbackException {
         when(IMSHttpCalls.getIMSToken(anyMap())).thenReturn(null);
         handler.handle(callbacks);
     }
@@ -97,7 +108,7 @@ public class IMSAuthenticateLoginCallbackHandlerTest {
         options.put("ims.grant.", "test_grant_type");
 
         AppConfigurationEntry firstItem = new AppConfigurationEntry("OAuthBearerLoginModule",
-        LoginModuleControlFlag.REQUIRED, options);
+                LoginModuleControlFlag.REQUIRED, options);
         List<AppConfigurationEntry> jaasConfigEntries = new ArrayList<AppConfigurationEntry>();
         jaasConfigEntries.add(firstItem);
         imsAuthenticateLoginCallbackHandlerTest.configure(null, "OAUTHBEA", jaasConfigEntries);
@@ -112,7 +123,7 @@ public class IMSAuthenticateLoginCallbackHandlerTest {
         options.put("ims.client.id", "test_client_id");
 
         AppConfigurationEntry firstItem = new AppConfigurationEntry("OAuthBearerLoginModule",
-        LoginModuleControlFlag.REQUIRED, options);
+                LoginModuleControlFlag.REQUIRED, options);
         List<AppConfigurationEntry> jaasConfigEntries = new ArrayList<AppConfigurationEntry>();
         jaasConfigEntries.add(firstItem);
         imsAuthenticateLoginCallbackHandlerTest.configure(null, "OAUTHBEARER", jaasConfigEntries);

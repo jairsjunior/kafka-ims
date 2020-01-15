@@ -95,12 +95,12 @@ public class IMSBearerTokenJwt implements OAuthBearerToken {
     @Override
     public String toString() {
         return "IMSBearerTokenJwt{" +
-                "value='" + value + '\'' +
-                ", lifetimeMs=" + lifetimeMs +
-                ", principalName='" + principalName + '\'' +
-                ", startTimeMs=" + startTimeMs +
-                ", scope=" + scope() +
-                '}';
+               "value='" + value + '\'' +
+               ", lifetimeMs=" + lifetimeMs +
+               ", principalName='" + principalName + '\'' +
+               ", startTimeMs=" + startTimeMs +
+               ", scope=" + scope() +
+               '}';
     }
 
 }

@@ -1,3 +1,12 @@
+/*
+ * ADOBE CONFIDENTIAL. Copyright 2019 Adobe Systems Incorporated. All Rights Reserved. NOTICE: All information contained
+ * herein is, and remains the property of Adobe Systems Incorporated and its suppliers, if any. The intellectual and
+ * technical concepts contained herein are proprietary to Adobe Systems Incorporated and its suppliers and are protected
+ * by all applicable intellectual property laws, including trade secret and copyright law. Dissemination of this
+ * information or reproduction of this material is strictly forbidden unless prior written permission is obtained
+ * from Adobe Systems Incorporated.
+ */
+
 package com.adobe.ids.dim.security.java;
 
 import static org.junit.Assert.assertEquals;
@@ -25,11 +34,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ IMSHttpCalls.class })
+@PowerMockIgnore("jdk.internal.reflect.*")
 public class IMSAuthenticateValidatorCallbackHandlerTest {
 
     IMSAuthenticateValidatorCallbackHandler handler;
@@ -94,7 +105,7 @@ public class IMSAuthenticateValidatorCallbackHandlerTest {
         when(IMSHttpCalls.validateIMSToken("token", null)).thenReturn(invalidScopeJwt);
         handler.handle(callbacks);
         assertEquals(((OAuthBearerValidatorCallback) callbacks[0]).errorStatus(),
-                "Token doesn't have required scopes! We cannot accept this token. Please work with DIM team to get needed scopes added");
+                     "Token doesn't have required scopes! We cannot accept this token. Please work with DIM team to get needed scopes added");
     }
 
     @Test
@@ -103,39 +114,39 @@ public class IMSAuthenticateValidatorCallbackHandlerTest {
         iMSAuthenticateValidatorCallbackHandlerTest.setIsRegisterMetrics(false);
         Map<String, String> options = new HashMap<String, String>();
         options.put("ims.token.validation.url", "test_url");
-    
+
         AppConfigurationEntry firstItem = new AppConfigurationEntry("OAuthBearerLoginModule",
                 LoginModuleControlFlag.REQUIRED, options);
         List<AppConfigurationEntry> jaasConfigEntries = new ArrayList<AppConfigurationEntry>();
         jaasConfigEntries.add(firstItem);
         iMSAuthenticateValidatorCallbackHandlerTest.configure(null, "OAUTHBEARER", jaasConfigEntries);
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
     public void whenInvalidParametersPassed_thenIllegalArgumentExceptionIsThrown() {
         IMSAuthenticateValidatorCallbackHandler iMSAuthenticateValidatorCallbackHandlerTest = new IMSAuthenticateValidatorCallbackHandler();
         iMSAuthenticateValidatorCallbackHandlerTest.setIsRegisterMetrics(false);
         Map<String, String> options = new HashMap<String, String>();
         options.put("ims.token.validation.url", "test_url");
-    
+
         AppConfigurationEntry firstItem = new AppConfigurationEntry("OAuthBearerLoginModule",
                 LoginModuleControlFlag.REQUIRED, options);
         List<AppConfigurationEntry> jaasConfigEntries = new ArrayList<AppConfigurationEntry>();
         jaasConfigEntries.add(firstItem);
         iMSAuthenticateValidatorCallbackHandlerTest.configure(null, "OAUTHBEA", jaasConfigEntries);
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
     public void whenMissingParametersPassed_thenIllegalArgumentExceptionIsThrown() {
         IMSAuthenticateValidatorCallbackHandler iMSAuthenticateValidatorCallbackHandlerTest = new IMSAuthenticateValidatorCallbackHandler();
         iMSAuthenticateValidatorCallbackHandlerTest.setIsRegisterMetrics(false);
         Map<String, String> options = new HashMap<String, String>();
-    
+
         AppConfigurationEntry firstItem = new AppConfigurationEntry("OAuthBearerLoginModule",
                 LoginModuleControlFlag.REQUIRED, options);
         List<AppConfigurationEntry> jaasConfigEntries = new ArrayList<AppConfigurationEntry>();
         jaasConfigEntries.add(firstItem);
-    
+
         iMSAuthenticateValidatorCallbackHandlerTest.configure(null, "OAUTHBEARER", jaasConfigEntries);
     }
 

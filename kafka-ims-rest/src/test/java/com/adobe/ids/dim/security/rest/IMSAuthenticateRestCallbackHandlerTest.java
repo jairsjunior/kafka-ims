@@ -1,3 +1,12 @@
+/*
+ * ADOBE CONFIDENTIAL. Copyright 2019 Adobe Systems Incorporated. All Rights Reserved. NOTICE: All information contained
+ * herein is, and remains the property of Adobe Systems Incorporated and its suppliers, if any. The intellectual and
+ * technical concepts contained herein are proprietary to Adobe Systems Incorporated and its suppliers and are protected
+ * by all applicable intellectual property laws, including trade secret and copyright law. Dissemination of this
+ * information or reproduction of this material is strictly forbidden unless prior written permission is obtained
+ * from Adobe Systems Incorporated.
+ */
+
 package com.adobe.ids.dim.security.rest;
 
 import static org.junit.Assert.assertNotNull;
@@ -24,11 +33,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ OAuthRestProxyUtil.class })
+@PowerMockIgnore("jdk.internal.reflect.*")
 public class IMSAuthenticateRestCallbackHandlerTest {
 
     IMSAuthenticateRestCallbackHandler handler;
@@ -66,7 +77,7 @@ public class IMSAuthenticateRestCallbackHandlerTest {
         handler.handle(callbacks);
         assertNotNull(((OAuthBearerTokenCallback) callbacks[0]).token());
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
     public void testTokenNull()
     throws IOException, UnsupportedCallbackException {

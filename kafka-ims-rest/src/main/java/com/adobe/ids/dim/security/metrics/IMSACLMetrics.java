@@ -7,12 +7,22 @@
  * from Adobe Systems Incorporated.
  */
 
-package com.adobe.ids.dim.security.common.exception;
+package com.adobe.ids.dim.security.metrics;
 
-public class IMSException extends Exception {
+public class IMSACLMetrics implements IMSACLMetricsMBean {
 
-    public IMSException(int errCode, String message) {
-        super("Error Code: " + String.valueOf(errCode) +", Error Message: " + message);
+    private Integer countWithoutACLRequestCount;
+
+    public IMSACLMetrics() {
+        this.countWithoutACLRequestCount=0;
     }
 
+    @Override
+    public Integer getACLDeniedRequestCount() {
+        return countWithoutACLRequestCount;
+    }
+
+    public void incACLDeniedACLRequestCount() {
+        this.countWithoutACLRequestCount++;
+    }
 }

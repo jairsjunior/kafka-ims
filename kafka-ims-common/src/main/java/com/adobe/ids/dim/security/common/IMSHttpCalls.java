@@ -148,7 +148,7 @@ public class IMSHttpCalls {
 
 
     private static Map < String, Object > postRequest(String urlStr, String postParameters)
-            throws IMSException {
+    throws IMSException {
 
         HttpsURLConnection con = null;
         byte[] postData = postParameters.getBytes(StandardCharsets.UTF_8);
@@ -227,7 +227,8 @@ public class IMSHttpCalls {
 
             while ((inputLine = in .readLine()) != null) {
                 response.append(inputLine);
-            } in .close();
+            }
+            in .close();
 
             String jsonResponse = response.toString();
             ObjectMapper objectMapper = new ObjectMapper();

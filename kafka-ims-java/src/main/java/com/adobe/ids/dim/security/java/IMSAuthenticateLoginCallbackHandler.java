@@ -1,6 +1,15 @@
+/*
+ * ADOBE CONFIDENTIAL. Copyright 2019 Adobe Systems Incorporated. All Rights Reserved. NOTICE: All information contained
+ * herein is, and remains the property of Adobe Systems Incorporated and its suppliers, if any. The intellectual and
+ * technical concepts contained herein are proprietary to Adobe Systems Incorporated and its suppliers and are protected
+ * by all applicable intellectual property laws, including trade secret and copyright law. Dissemination of this
+ * information or reproduction of this material is strictly forbidden unless prior written permission is obtained
+ * from Adobe Systems Incorporated.
+ */
+
 package com.adobe.ids.dim.security.java;
 
-import com.adobe.ids.dim.security.util.StringsUtil;
+import com.adobe.ids.dim.security.common.StringsUtil;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule;
@@ -33,7 +42,7 @@ public class IMSAuthenticateLoginCallbackHandler implements AuthenticateCallback
     @Override
     public void configure(Map < String, ? > map, String saslMechanism, List < AppConfigurationEntry > jaasConfigEntries) {
         log.debug("IMSAuthenticateLoginCallbackHandler configure");
-        if (!OAuthBearerLoginModule.OAUTHBEARER_MECHANISM.equals(saslMechanism)){
+        if (!OAuthBearerLoginModule.OAUTHBEARER_MECHANISM.equals(saslMechanism)) {
             log.debug(String.format("Unexpected SASL mechanism: %s", saslMechanism));
             throw new IllegalArgumentException(String.format("Unexpected SASL mechanism: %s", saslMechanism));
         }
@@ -82,14 +91,14 @@ public class IMSAuthenticateLoginCallbackHandler implements AuthenticateCallback
     @Override
     public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
         log.debug("IMSAuthenticateLoginCallbackHandler handle");
-        if (!isConfigured()){
+        if (!isConfigured()) {
             log.debug("Callback handler not configured");
             throw new IllegalStateException("Callback handler not configured");
         }
 
         log.debug("For each callback received on handle");
         for (Callback callback: callbacks) {
-            if (callback instanceof OAuthBearerTokenCallback){
+            if (callback instanceof OAuthBearerTokenCallback) {
                 try {
                     log.debug("callback is an instance of OAuthBearerTokenCallback");
                     handleCallback((OAuthBearerTokenCallback) callback);
@@ -97,7 +106,7 @@ public class IMSAuthenticateLoginCallbackHandler implements AuthenticateCallback
                     log.debug("on handleCallback");
                     throw new IOException(e.getMessage(), e);
                 }
-            }else{
+            } else {
                 log.debug("Callback is not a instance of OAuthBearerTokenCallback", callback.getClass().getName());
                 throw new UnsupportedCallbackException(callback);
             }
@@ -106,7 +115,7 @@ public class IMSAuthenticateLoginCallbackHandler implements AuthenticateCallback
 
     private void handleCallback(OAuthBearerTokenCallback callback) {
         log.debug("IMSAuthenticateLoginCallbackHandler handleCallback");
-        if (callback.token() != null){
+        if (callback.token() != null) {
             log.debug("Callback had a token already");
             throw new IllegalArgumentException("Callback had a token already");
         }

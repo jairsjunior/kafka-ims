@@ -2,10 +2,10 @@
 %define __jar_repack %{nil}
 %define install_path /usr/share/java/kafka
 
-Name: kafka-ims-client
+Name: kafka-ims-uber-client
 Summary: IMS Plugin for Kafka Broker and Java Clients 
-Version: 1.0
-Release: 1
+Version: %{version}
+Release: %{release}
 Vendor: Upala Corporation
 Packager: Manoj Murumkar <nex37045@adobe.com>
 Group: Adobe/IDS/DIM

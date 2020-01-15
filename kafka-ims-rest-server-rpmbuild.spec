@@ -4,8 +4,8 @@
 
 Name: kafka-ims-rest-server
 Summary: IMS Plugin for Kafka REST Proxy 
-Version: 1.0
-Release: 1
+Version: %{version}
+Release: %{release}
 Vendor: Upala Corporation
 Packager: Manoj Murumkar <nex37045@adobe.com>
 Group: Adobe/IDS/DIM

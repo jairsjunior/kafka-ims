@@ -4,4 +4,4 @@ WORKDIR /root
 ARG release
 ARG version
 COPY . .
-RUN rpmbuild -vv -bb -D "version $version" -D "release $release" kafka-ims-server-rpmbuild.spec
+RUN rpmbuild -vv -bb -D "version $version" -D "release $release" kafka-ims-uber-client-rpmbuild.spec

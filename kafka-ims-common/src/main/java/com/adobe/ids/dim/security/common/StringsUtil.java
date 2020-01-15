@@ -7,12 +7,17 @@
  * from Adobe Systems Incorporated.
  */
 
-package com.adobe.ids.dim.security.common.exception;
+package com.adobe.ids.dim.security.common;
 
-public class IMSException extends Exception {
+public class StringsUtil {
 
-    public IMSException(int errCode, String message) {
-        super("Error Code: " + String.valueOf(errCode) +", Error Message: " + message);
+    public static boolean isNullOrEmpty(String s) {
+        if (s == null) {
+            return true;
+        }
+        if (s.isEmpty()) {
+            return true;
+        }
+        return false;
     }
-
 }

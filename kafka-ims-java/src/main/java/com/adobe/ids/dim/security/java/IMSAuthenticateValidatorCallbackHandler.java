@@ -10,7 +10,7 @@
 package com.adobe.ids.dim.security.java;
 
 import com.adobe.ids.dim.security.common.exception.IMSValidatorException;
-import com.adobe.ids.dim.security.util.StringsUtil;
+import com.adobe.ids.dim.security.common.StringsUtil;
 import com.adobe.ids.dim.security.metrics.OAuthMetricsValidator;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerExtensionsValidatorCallback;
@@ -87,7 +87,7 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
     public void registerMetrics() {
         try {
             MBeanServer platformMBeanServer = ManagementFactory.getPlatformMBeanServer();
-            ObjectName objectName = new ObjectName("com.adobe.ids.dim.security.app:name=OAuthMetrics");
+            ObjectName objectName = new ObjectName("kafka-broker:name=ims-metrics");
             platformMBeanServer.registerMBean(OAuthMetricsValidator.getInstance(), objectName);
         } catch (Exception e) {
             log.error("Error on register MBean Server for JMX metrics");
@@ -98,7 +98,7 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
     public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
         if (!isConfigured())
             throw new IllegalStateException("Callback handler not configured");
-        for (Callback callback : callbacks) {
+        for (Callback callback: callbacks) {
             if (callback instanceof OAuthBearerValidatorCallback) {
                 OAuthBearerValidatorCallback validationCallback = (OAuthBearerValidatorCallback) callback;
                 try {
@@ -118,7 +118,8 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
         }
     }
 
-    private void handleCallback(OAuthBearerValidatorCallback callback) throws IllegalArgumentException {
+    private void handleCallback(OAuthBearerValidatorCallback callback)
+    throws IllegalArgumentException {
         String accessToken = callback.tokenValue();
         if (accessToken == null)
             throw new IllegalArgumentException("Callback missing required token value");
@@ -143,9 +144,7 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
             log.debug("Token doesn't have required scopes! We cannot accept this token");
             log.debug("Required scope is: {}", DIM_CORE_SCOPE);
             log.debug("Token has following scopes: {}", scopes);
-            OAuthBearerValidationResult
-                    .newFailure(IMSValidatorException.KAFKA_EXCEPTION_WITHOUT_SCOPE_MSG, DIM_CORE_SCOPE, "")
-                    .throwExceptionIfFailed();
+            OAuthBearerValidationResult.newFailure(IMSValidatorException.KAFKA_EXCEPTION_WITHOUT_SCOPE_MSG, "Missing scope "+ DIM_CORE_SCOPE, "").throwExceptionIfFailed();
         }
 
         log.debug("Validated IMS Token: {}", token.toString());
