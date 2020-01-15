@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -96,9 +97,10 @@ public class IMSAuthenticateValidatorCallbackHandlerTest {
                 "Token doesn't have required scopes! We cannot accept this token. Please work with DIM team to get needed scopes added");
     }
 
-    /* @Test
+    @Test
     public void testConfigureForValidParameters() {
         IMSAuthenticateValidatorCallbackHandler iMSAuthenticateValidatorCallbackHandlerTest = new IMSAuthenticateValidatorCallbackHandler();
+        iMSAuthenticateValidatorCallbackHandlerTest.setIsRegisterMetrics(false);
         Map<String, String> options = new HashMap<String, String>();
         options.put("ims.token.validation.url", "test_url");
     
@@ -112,6 +114,7 @@ public class IMSAuthenticateValidatorCallbackHandlerTest {
     @Test(expected = IllegalArgumentException.class)
     public void whenInvalidParametersPassed_thenIllegalArgumentExceptionIsThrown() {
         IMSAuthenticateValidatorCallbackHandler iMSAuthenticateValidatorCallbackHandlerTest = new IMSAuthenticateValidatorCallbackHandler();
+        iMSAuthenticateValidatorCallbackHandlerTest.setIsRegisterMetrics(false);
         Map<String, String> options = new HashMap<String, String>();
         options.put("ims.token.validation.url", "test_url");
     
@@ -125,6 +128,7 @@ public class IMSAuthenticateValidatorCallbackHandlerTest {
     @Test(expected = IllegalArgumentException.class)
     public void whenMissingParametersPassed_thenIllegalArgumentExceptionIsThrown() {
         IMSAuthenticateValidatorCallbackHandler iMSAuthenticateValidatorCallbackHandlerTest = new IMSAuthenticateValidatorCallbackHandler();
+        iMSAuthenticateValidatorCallbackHandlerTest.setIsRegisterMetrics(false);
         Map<String, String> options = new HashMap<String, String>();
     
         AppConfigurationEntry firstItem = new AppConfigurationEntry("OAuthBearerLoginModule",
@@ -133,6 +137,6 @@ public class IMSAuthenticateValidatorCallbackHandlerTest {
         jaasConfigEntries.add(firstItem);
     
         iMSAuthenticateValidatorCallbackHandlerTest.configure(null, "OAUTHBEARER", jaasConfigEntries);
-    } */
+    }
 
 }
