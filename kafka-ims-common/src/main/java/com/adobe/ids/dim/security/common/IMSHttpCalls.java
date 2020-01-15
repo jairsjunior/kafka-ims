@@ -190,7 +190,7 @@ public class IMSHttpCalls {
 
     private static Map < String, Object > postRequest(String urlStr, String postParameters)
     throws IMSException {
-
+        String responseMessage = "";
         HttpsURLConnection con = null;
         byte[] postData = postParameters.getBytes(StandardCharsets.UTF_8);
         int postDataLength = postData.length;
