@@ -9,22 +9,23 @@
 
 package com.adobe.ids.dim.security.java;
 
+import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
+import com.adobe.ids.dim.security.common.IMSHttpCalls;
 import com.adobe.ids.dim.security.common.StringsUtil;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerTokenCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.AppConfigurationEntry;
 import java.io.IOException;
-import java.util.*;
-
-import com.adobe.ids.dim.security.common.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class IMSAuthenticateLoginCallbackHandler implements AuthenticateCallbackHandler {
 
@@ -34,43 +35,46 @@ public class IMSAuthenticateLoginCallbackHandler implements AuthenticateCallback
     public static final String IMS_ENDPOINT_CONFIG = "ims.token.url";
     public static final String IMS_GRANT_TYPE_CONFIG = "ims.grant.type";
 
-
     private final Logger log = LoggerFactory.getLogger(IMSAuthenticateLoginCallbackHandler.class);
-    private Map < String, String > moduleOptions = null;
+    private Map<String, ?> moduleOptions = null;
     private boolean configured = false;
 
     @Override
-    public void configure(Map < String, ? > map, String saslMechanism, List < AppConfigurationEntry > jaasConfigEntries) {
+    public void configure(
+        Map<String, ?> map, String saslMechanism, List<AppConfigurationEntry> jaasConfigEntries) {
         log.debug("IMSAuthenticateLoginCallbackHandler configure");
         if (!OAuthBearerLoginModule.OAUTHBEARER_MECHANISM.equals(saslMechanism)) {
             log.debug(String.format("Unexpected SASL mechanism: %s", saslMechanism));
-            throw new IllegalArgumentException(String.format("Unexpected SASL mechanism: %s", saslMechanism));
+            throw new IllegalArgumentException(
+                String.format("Unexpected SASL mechanism: %s", saslMechanism));
         }
 
-        this.moduleOptions = Collections.unmodifiableMap((Map < String, String > ) jaasConfigEntries.get(0).getOptions());
+        this.moduleOptions = Collections.unmodifiableMap(jaasConfigEntries.get(0).getOptions());
+        ;
 
-        if (!moduleOptions.containsKey(IMS_ENDPOINT_CONFIG) ||
-                StringsUtil.isNullOrEmpty(moduleOptions.get(IMS_ENDPOINT_CONFIG))) {
+        if (!moduleOptions.containsKey(IMS_ENDPOINT_CONFIG)
+                || StringsUtil.isNullOrEmpty((String) moduleOptions.get(IMS_ENDPOINT_CONFIG))) {
             throw new IllegalArgumentException("Missing " + IMS_ENDPOINT_CONFIG + " in jaas config.");
         }
 
-        if (!moduleOptions.containsKey(IMS_CLIENT_ID_CONFIG) ||
-                StringsUtil.isNullOrEmpty(moduleOptions.get(IMS_CLIENT_ID_CONFIG))) {
+        if (!moduleOptions.containsKey(IMS_CLIENT_ID_CONFIG)
+                || StringsUtil.isNullOrEmpty((String) moduleOptions.get(IMS_CLIENT_ID_CONFIG))) {
             throw new IllegalArgumentException("Missing " + IMS_CLIENT_ID_CONFIG + " in jaas config.");
         }
 
-        if (!moduleOptions.containsKey(IMS_CLIENT_CODE_CONFIG) ||
-                StringsUtil.isNullOrEmpty(moduleOptions.get(IMS_CLIENT_CODE_CONFIG))) {
+        if (!moduleOptions.containsKey(IMS_CLIENT_CODE_CONFIG)
+                || StringsUtil.isNullOrEmpty((String) moduleOptions.get(IMS_CLIENT_CODE_CONFIG))) {
             throw new IllegalArgumentException("Missing " + IMS_CLIENT_CODE_CONFIG + " in jaas config.");
         }
 
-        if (!moduleOptions.containsKey(IMS_CLIENT_SECRET_CONFIG) ||
-                StringsUtil.isNullOrEmpty(moduleOptions.get(IMS_CLIENT_SECRET_CONFIG))) {
-            throw new IllegalArgumentException("Missing " + IMS_CLIENT_SECRET_CONFIG + " in jaas config.");
+        if (!moduleOptions.containsKey(IMS_CLIENT_SECRET_CONFIG)
+                || StringsUtil.isNullOrEmpty((String) moduleOptions.get(IMS_CLIENT_SECRET_CONFIG))) {
+            throw new IllegalArgumentException(
+                "Missing " + IMS_CLIENT_SECRET_CONFIG + " in jaas config.");
         }
 
-        if (!moduleOptions.containsKey(IMS_GRANT_TYPE_CONFIG) ||
-                StringsUtil.isNullOrEmpty(moduleOptions.get(IMS_GRANT_TYPE_CONFIG))) {
+        if (!moduleOptions.containsKey(IMS_GRANT_TYPE_CONFIG)
+                || StringsUtil.isNullOrEmpty((String) moduleOptions.get(IMS_GRANT_TYPE_CONFIG))) {
             throw new IllegalArgumentException("Missing " + IMS_GRANT_TYPE_CONFIG + " in jaas config.");
         }
 
@@ -129,5 +133,4 @@ public class IMSAuthenticateLoginCallbackHandler implements AuthenticateCallback
         log.debug("Retrieved IMS Token: {}", token.toString());
         callback.token(token);
     }
-
 }

@@ -4,7 +4,12 @@ This is an implementation of the idea that was circulated as part of [KIP-255](h
 
 ## Configure brokers
 
-* Add skinny jar that is created after building the module (kafka-ims-java-1.0-SNAPSHOT.jar, for example) to kafka lib directory (/usr/share/java/kafka).
+* Add skinny jar files that is created after building the modules to kafka lib directory (/usr/share/java/kafka). 
+List of jar files needed:
+
+  * kafka-ims-common-\<version\>.jar
+  * kafka-ims-java-\<version\>.jar
+
 * Start the brokers with following JAAS configuration. IMS token validation URL depends on the environment.
 
 ```conf

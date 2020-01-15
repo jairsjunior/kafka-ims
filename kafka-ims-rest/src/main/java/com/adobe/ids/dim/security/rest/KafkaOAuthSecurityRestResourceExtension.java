@@ -12,7 +12,7 @@ package com.adobe.ids.dim.security.rest;
 import com.adobe.ids.dim.security.rest.config.KafkaOAuthSecurityRestConfig;
 import com.adobe.ids.dim.security.rest.context.KafkaOAuthRestContextFactory;
 import com.adobe.ids.dim.security.rest.filter.OAuthCleanerFilter;
-import com.adobe.ids.dim.security.rest.filter.OAuthFilter;
+import com.adobe.ids.dim.security.rest.filter.OAuthRequestFilter;
 import com.adobe.ids.dim.security.rest.filter.OAuthResponseFilter;
 import io.confluent.kafkarest.KafkaRestConfig;
 import io.confluent.kafkarest.extension.RestResourceExtension;
@@ -23,14 +23,17 @@ import javax.ws.rs.core.Configurable;
 
 public class KafkaOAuthSecurityRestResourceExtension implements RestResourceExtension {
 
-    private static final Logger log = LoggerFactory.getLogger(KafkaOAuthSecurityRestResourceExtension.class);
+    private static final Logger log =
+        LoggerFactory.getLogger(KafkaOAuthSecurityRestResourceExtension.class);
 
     public void register(Configurable<?> config, KafkaRestConfig restConfig) {
         try {
             log.debug("KafkaOAuthSecurityRestResourceExtension -- register");
-            final KafkaOAuthSecurityRestConfig secureKafkaRestConfig = new KafkaOAuthSecurityRestConfig(restConfig.getOriginalProperties(), null);
+            final KafkaOAuthSecurityRestConfig secureKafkaRestConfig =
+                new KafkaOAuthSecurityRestConfig(restConfig.getOriginalProperties(), null);
             log.debug("KafkaOAuthSecurityRestResourceExtension -- registering OAuthfilter");
-            config.register(new OAuthFilter(secureKafkaRestConfig));
+            // Change the name of class to OAuthRequestFilter..
+            config.register(new OAuthRequestFilter(secureKafkaRestConfig));
             config.register(OAuthCleanerFilter.class);
             config.register(new OAuthResponseFilter());
 
@@ -42,5 +45,4 @@ public class KafkaOAuthSecurityRestResourceExtension implements RestResourceExte
     public void clean() {
         KafkaOAuthRestContextFactory.getInstance().clean();
     }
-
 }

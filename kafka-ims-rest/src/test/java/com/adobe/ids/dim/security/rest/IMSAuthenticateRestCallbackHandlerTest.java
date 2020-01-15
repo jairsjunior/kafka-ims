@@ -9,25 +9,8 @@
 
 package com.adobe.ids.dim.security.rest;
 
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.when;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.UnsupportedCallbackException;
-import javax.security.auth.login.AppConfigurationEntry;
-import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
-
 import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
 import com.adobe.ids.dim.security.util.OAuthRestProxyUtil;
-
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerTokenCallback;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,8 +20,18 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.UnsupportedCallbackException;
+import javax.security.auth.login.AppConfigurationEntry;
+import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
+import java.io.IOException;
+import java.util.*;
+
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.when;
+
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ OAuthRestProxyUtil.class })
+@PrepareForTest({OAuthRestProxyUtil.class})
 @PowerMockIgnore("jdk.internal.reflect.*")
 public class IMSAuthenticateRestCallbackHandlerTest {
 
@@ -72,27 +65,33 @@ public class IMSAuthenticateRestCallbackHandlerTest {
 
     @Test
     public void testValidToken() throws IOException, UnsupportedCallbackException {
-        when(OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer("token.test")).thenReturn(imsBearerValidTokenJwt);
-        handler.setModuleOptions("token.test");
+        when(OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer("token.test"))
+        .thenReturn(imsBearerValidTokenJwt);
+        Map<String, String> moduleOptions = new HashMap<>();
+        moduleOptions.put("ims.access.token", "token.test");
+        handler.setModuleOptions(moduleOptions);
         handler.handle(callbacks);
         assertNotNull(((OAuthBearerTokenCallback) callbacks[0]).token());
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testTokenNull()
-    throws IOException, UnsupportedCallbackException {
-        handler.setModuleOptions(null);
+    public void testTokenNull() throws IOException, UnsupportedCallbackException {
+        Map<String, String> moduleOptions = new HashMap<>();
+        moduleOptions.put("ims.access.token", null);
+        handler.setModuleOptions(moduleOptions);
         handler.handle(callbacks);
     }
 
     @Test
     public void testConfigureForValidParameters() {
-        IMSAuthenticateRestCallbackHandler iMSAuthenticateRestCallbackHandler = new IMSAuthenticateRestCallbackHandler();
+        IMSAuthenticateRestCallbackHandler iMSAuthenticateRestCallbackHandler =
+            new IMSAuthenticateRestCallbackHandler();
         Map<String, String> options = new HashMap<String, String>();
         options.put("ims.access.token", "sdfsdfsdf");
 
-        AppConfigurationEntry firstItem = new AppConfigurationEntry("OAuthBearerLoginModule",
-                LoginModuleControlFlag.REQUIRED, options);
+        AppConfigurationEntry firstItem =
+            new AppConfigurationEntry(
+            "OAuthBearerLoginModule", LoginModuleControlFlag.REQUIRED, options);
         List<AppConfigurationEntry> jaasConfigEntries = new ArrayList<AppConfigurationEntry>();
         jaasConfigEntries.add(firstItem);
         iMSAuthenticateRestCallbackHandler.configure(null, "OAUTHBEARER", jaasConfigEntries);
@@ -100,15 +99,16 @@ public class IMSAuthenticateRestCallbackHandlerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void whenInvalidParametersPassed_thenIllegalArgumentExceptionIsThrown() {
-        IMSAuthenticateRestCallbackHandler iMSAuthenticateRestCallbackHandler = new IMSAuthenticateRestCallbackHandler();
+        IMSAuthenticateRestCallbackHandler iMSAuthenticateRestCallbackHandler =
+            new IMSAuthenticateRestCallbackHandler();
         Map<String, String> options = new HashMap<String, String>();
         options.put("ims.access.token", "sdfsdfsdfer");
 
-        AppConfigurationEntry firstItem = new AppConfigurationEntry("OAuthBearerLoginModule",
-                LoginModuleControlFlag.REQUIRED, options);
+        AppConfigurationEntry firstItem =
+            new AppConfigurationEntry(
+            "OAuthBearerLoginModule", LoginModuleControlFlag.REQUIRED, options);
         List<AppConfigurationEntry> jaasConfigEntries = new ArrayList<AppConfigurationEntry>();
         jaasConfigEntries.add(firstItem);
         iMSAuthenticateRestCallbackHandler.configure(null, "OAUTHBEA", jaasConfigEntries);
     }
-
 }

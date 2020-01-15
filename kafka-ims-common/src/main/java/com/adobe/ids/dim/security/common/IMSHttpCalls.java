@@ -17,38 +17,47 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.validation.constraints.Null;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.Base64;
-
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 public class IMSHttpCalls {
 
     private static final Logger log = LoggerFactory.getLogger(IMSHttpCalls.class);
 
-    // These environment variables should be set on the client side (validation URL is set on server side)
-    private static final String IMS_TOKEN_VALIDATION_URL = (String) getEnvironmentVariables("IMS_TOKEN_VALIDATION_URL", "");
+    // These environment variables should be set on the client side (validation URL
+    // is set on server
+    // side)
+    private static final String IMS_TOKEN_VALIDATION_URL = (String) getEnvironmentVariables("IMS_TOKEN_VALIDATION_URL",
+            "");
     private static final String IMS_TOKEN_URL = (String) getEnvironmentVariables("IMS_TOKEN_URL", "");
     private static final String IMS_GRANT_TYPE = (String) getEnvironmentVariables("IMS_GRANT_TYPE", "");
     private static final String IMS_CLIENT_ID = (String) getEnvironmentVariables("IMS_CLIENT_ID", "");
     private static final String IMS_CLIENT_SECRET = (String) getEnvironmentVariables("IMS_CLIENT_SECRET", "");
     private static final String IMS_CLIENT_CODE = (String) getEnvironmentVariables("IMS_CLIENT_CODE", "");
-
+    private static final String IMS_RETRIES_MAX = (String) getEnvironmentVariables("IMS_RETRIES_MAX", "10");
     private static Time time = Time.SYSTEM;
+    private static Random rdm = new Random();
 
-    public static IMSBearerTokenJwt getIMSToken(Map < String, String > configOptions) {
+    public static IMSBearerTokenJwt getIMSToken(Map<String, ?> configOptions) {
         IMSBearerTokenJwt result = null;
         try {
+            int maxRetries = Integer
+                             .valueOf((String) getConfigOptionOrEnvironment("ims.retries.max", configOptions, IMS_RETRIES_MAX));
+            int nroRetries = 0;
             long callTimeMs = System.currentTimeMillis();
 
-            //POST data
+            // POST data
             String grantType = "grant_type=" + getConfigOptionOrEnvironment("ims.grant.type", configOptions, IMS_GRANT_TYPE);
             String clientID = "client_id=" + getConfigOptionOrEnvironment("ims.client.id", configOptions, IMS_CLIENT_ID);
-            String clientSecret = "client_secret=" + getConfigOptionOrEnvironment("ims.client.secret", configOptions, IMS_CLIENT_SECRET);
+            String clientSecret = "client_secret="
+                                  + getConfigOptionOrEnvironment("ims.client.secret", configOptions, IMS_CLIENT_SECRET);
             String clientCode = "code=" + getConfigOptionOrEnvironment("ims.client.code", configOptions, IMS_CLIENT_CODE);
             String postDataStr = grantType + "&" + clientID + "&" + clientSecret + "&" + clientCode;
 
@@ -56,9 +65,22 @@ public class IMSHttpCalls {
             log.debug("Trying to get AccessToken from IMS");
             log.debug("Request URL: " + tokenUrl + "?" + postDataStr);
 
-            Map < String, Object > resp = null;
+            Map<String, Object> resp = null;
 
-            resp = postRequest(tokenUrl, postDataStr);
+            while (nroRetries < maxRetries) {
+                try {
+                    resp = postRequest(tokenUrl, postDataStr);
+                    break;
+                } catch (IMSException e) {
+                    int sleepTime = 300 * (int) Math.pow(2, nroRetries) + (rdm.nextInt(100) + 1);
+                    log.error("Exception on calling IMS Server: " + nroRetries + "/" + maxRetries +" retry again in " + sleepTime + " ms");
+                    Thread.sleep(sleepTime);
+                    nroRetries++;
+                    if (nroRetries > maxRetries) {
+                        throw new Exception("Maximum retries to IMS reached!");
+                    }
+                }
+            }
 
             if (resp != null) {
                 String accessToken = (String) resp.get("access_token");
@@ -80,11 +102,14 @@ public class IMSHttpCalls {
         return result;
     }
 
-    public static IMSBearerTokenJwt validateIMSToken(String accessToken, Map < String, String > configOptions) {
+    public static IMSBearerTokenJwt validateIMSToken(String accessToken, Map<String, ?> configOptions) {
 
         IMSBearerTokenJwt result = null;
 
         try {
+            int maxRetries = Integer
+                             .valueOf((String) getConfigOptionOrEnvironment("ims.retries.max", configOptions, IMS_RETRIES_MAX));
+            int nroRetries = 0;
 
             // Get client_id from access token
             String clientID = "client_id=" + getClientIdFromJWT(accessToken);
@@ -95,18 +120,33 @@ public class IMSHttpCalls {
 
             String postDataStr = token + "&" + clientID + "&" + type;
 
-            String validationUrl = (String) getConfigOptionOrEnvironment("ims.token.validation.url", configOptions, IMS_TOKEN_VALIDATION_URL);
+            String validationUrl = (String) getConfigOptionOrEnvironment("ims.token.validation.url", configOptions,
+                                   IMS_TOKEN_VALIDATION_URL);
             log.debug("Trying to validate token with IMS with URL: {}?{}", validationUrl, postDataStr);
 
-            Map < String, Object > resp = null;
-            Map < String, Object > tokenJson = null;
+            Map<String, Object> resp = null;
+            Map tokenJson = null;
 
-            resp = postRequest(validationUrl, postDataStr);
+            while (nroRetries < maxRetries) {
+                try {
+                    resp = postRequest(validationUrl, postDataStr);
+                    break;
+                } catch (IMSException e) {
+                    int sleepTime = 300 * (int) Math.pow(2, nroRetries) + (rdm.nextInt(100) + 1);
+                    log.error("Exception on calling IMS Server: " + nroRetries + "/" + maxRetries +" retry again in " + sleepTime + " ms");
+                    Thread.sleep(sleepTime);
+                    nroRetries++;
+                    if (nroRetries > maxRetries) {
+                        throw new Exception("Maximum retries to IMS reached!");
+                    }
+                }
+            }
 
             if (resp != null) {
                 if ((boolean) resp.get("valid")) {
-                    //Extract the token and convert it to a Map<String, Object>
+                    // Extract the token and convert it to a Map<String, Object>
                     ObjectMapper oMapper = new ObjectMapper();
+
                     tokenJson = oMapper.convertValue(resp.get("token"), Map.class);
 
                     result = new IMSBearerTokenJwt(tokenJson, accessToken);
@@ -117,7 +157,7 @@ public class IMSHttpCalls {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Problem on Validation of IMS Token", e);
         }
         return result;
     }
@@ -131,12 +171,13 @@ public class IMSHttpCalls {
 
         String payLoad = new String(decoder.decode(tokenString[1]));
 
-        Map < String, String > bodyItems = new HashMap < String, String > ();
+        Map<String, String> bodyItems = new HashMap<String, String>();
         String[] pairs = payLoad.split("\",\"");
 
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            Map < String, Object > payloadJson = objectMapper.readValue(payLoad, new TypeReference < Map < String, Object >> () {});
+            Map<String, Object> payloadJson = objectMapper.readValue(payLoad, new TypeReference<Map<String, Object>>() {
+            });
             clientID = (String) payloadJson.get("client_id");
         } catch (IOException e) {
             e.printStackTrace();
@@ -179,13 +220,17 @@ public class IMSHttpCalls {
                 return handleJsonResponse(con.getInputStream());
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error on trying to POST to " + urlStr, e);
+            responseMessage = e.getMessage();
         }
 
-        bufferedReader = new BufferedReader(new InputStreamReader(con.getErrorStream()));
-        String responseMessage = bufferedReader.lines().collect(Collectors.joining());
-        throw new IMSException(responseCode, responseMessage);
-
+        try{
+            bufferedReader = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+            responseMessage = bufferedReader.lines().collect(Collectors.joining());
+        }catch (NullPointerException e) {
+            log.error("Cannot get Error Stream message. Returning the previous exception message error");
+        }
+        throw new IMSException(0, responseMessage);
     }
 
     private static Object getEnvironmentVariables(String envName, Object defaultValue) {
@@ -209,7 +254,8 @@ public class IMSHttpCalls {
         return result;
     }
 
-    private static Object getConfigOptionOrEnvironment(String attribute, Map < String, String > configOptions, String environment) {
+    private static Object getConfigOptionOrEnvironment(String attribute, Map<String, ?> configOptions,
+            String environment) {
         if (configOptions != null) {
             if (configOptions.get(attribute) != null) {
                 return configOptions.get(attribute);
@@ -218,26 +264,26 @@ public class IMSHttpCalls {
         return environment;
     }
 
-    private static Map < String, Object > handleJsonResponse(InputStream inputStream) {
-        Map < String, Object > result = null;
+    private static Map<String, Object> handleJsonResponse(InputStream inputStream) {
+        Map<String, Object> result = null;
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
             String inputLine;
             StringBuffer response = new StringBuffer();
 
-            while ((inputLine = in .readLine()) != null) {
+            while ((inputLine = in.readLine()) != null) {
                 response.append(inputLine);
             }
-            in .close();
+            in.close();
 
             String jsonResponse = response.toString();
             ObjectMapper objectMapper = new ObjectMapper();
-            result = objectMapper.readValue(jsonResponse, new TypeReference < Map < String, Object >> () {});
+            result = objectMapper.readValue(jsonResponse, new TypeReference<Map<String, Object>>() {
+            });
 
         } catch (Exception e) {
             e.printStackTrace();
         }
         return result;
     }
-
 }

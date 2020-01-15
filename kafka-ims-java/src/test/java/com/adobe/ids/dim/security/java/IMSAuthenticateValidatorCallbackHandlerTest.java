@@ -28,7 +28,6 @@ import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 
 import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
 import com.adobe.ids.dim.security.common.IMSHttpCalls;
-
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerValidatorCallback;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,8 +37,20 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.UnsupportedCallbackException;
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.when;
+
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ IMSHttpCalls.class })
+@PrepareForTest({IMSHttpCalls.class})
 @PowerMockIgnore("jdk.internal.reflect.*")
 public class IMSAuthenticateValidatorCallbackHandlerTest {
 
@@ -53,7 +64,8 @@ public class IMSAuthenticateValidatorCallbackHandlerTest {
         handler.setConfigured(true);
         PowerMockito.mockStatic(IMSHttpCalls.class);
         callbacks = new Callback[1];
-        OAuthBearerValidatorCallback oAuthBearerValidatorCallback = new OAuthBearerValidatorCallback("token");
+        OAuthBearerValidatorCallback oAuthBearerValidatorCallback =
+            new OAuthBearerValidatorCallback("token");
         callbacks[0] = oAuthBearerValidatorCallback;
 
         Map<String, Object> jwtToken = new HashMap<String, Object>();

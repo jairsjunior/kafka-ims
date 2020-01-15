@@ -22,3 +22,8 @@ target/
 
 ### Builded Jar Files ###
 docker/**/*.jar
+docker/benckmark/
+node_modules/
+
+### Temporary project files
+old/

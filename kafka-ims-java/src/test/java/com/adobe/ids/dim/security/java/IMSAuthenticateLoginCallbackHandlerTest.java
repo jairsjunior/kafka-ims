@@ -9,24 +9,8 @@
 
 package com.adobe.ids.dim.security.java;
 
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.anyMap;
-import static org.mockito.Mockito.when;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.UnsupportedCallbackException;
-import javax.security.auth.login.AppConfigurationEntry;
-import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
-
 import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
 import com.adobe.ids.dim.security.common.IMSHttpCalls;
-
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerTokenCallback;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,8 +20,22 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.UnsupportedCallbackException;
+import javax.security.auth.login.AppConfigurationEntry;
+import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.anyMap;
+import static org.mockito.Mockito.when;
+
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ IMSHttpCalls.class })
+@PrepareForTest({IMSHttpCalls.class})
 @PowerMockIgnore("jdk.internal.reflect.*")
 public class IMSAuthenticateLoginCallbackHandlerTest {
 
@@ -80,7 +78,8 @@ public class IMSAuthenticateLoginCallbackHandlerTest {
 
     @Test
     public void testConfigureForValidParameters() {
-        IMSAuthenticateLoginCallbackHandler imsAuthenticateLoginCallbackHandlerTest = new IMSAuthenticateLoginCallbackHandler();
+        IMSAuthenticateLoginCallbackHandler imsAuthenticateLoginCallbackHandlerTest =
+            new IMSAuthenticateLoginCallbackHandler();
 
         Map<String, String> options = new HashMap<String, String>();
         options.put("ims.token.url", "test_url");
@@ -89,8 +88,9 @@ public class IMSAuthenticateLoginCallbackHandlerTest {
         options.put("ims.client.secret", "test_client_secret");
         options.put("ims.grant.type", "test_grant_type");
 
-        AppConfigurationEntry firstItem = new AppConfigurationEntry("OAuthBearerLoginModule",
-                LoginModuleControlFlag.REQUIRED, options);
+        AppConfigurationEntry firstItem =
+            new AppConfigurationEntry(
+            "OAuthBearerLoginModule", LoginModuleControlFlag.REQUIRED, options);
         List<AppConfigurationEntry> jaasConfigEntries = new ArrayList<AppConfigurationEntry>();
         jaasConfigEntries.add(firstItem);
         imsAuthenticateLoginCallbackHandlerTest.configure(null, "OAUTHBEARER", jaasConfigEntries);
@@ -98,7 +98,8 @@ public class IMSAuthenticateLoginCallbackHandlerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void whenInvalidParametersPassed_thenIllegalArgumentExceptionIsThrown() {
-        IMSAuthenticateLoginCallbackHandler imsAuthenticateLoginCallbackHandlerTest = new IMSAuthenticateLoginCallbackHandler();
+        IMSAuthenticateLoginCallbackHandler imsAuthenticateLoginCallbackHandlerTest =
+            new IMSAuthenticateLoginCallbackHandler();
 
         Map<String, String> options = new HashMap<String, String>();
         options.put("ims.token.url", "test_url");
@@ -116,7 +117,8 @@ public class IMSAuthenticateLoginCallbackHandlerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void whenMissingParametersPassed_thenIllegalArgumentExceptionIsThrown() {
-        IMSAuthenticateLoginCallbackHandler imsAuthenticateLoginCallbackHandlerTest = new IMSAuthenticateLoginCallbackHandler();
+        IMSAuthenticateLoginCallbackHandler imsAuthenticateLoginCallbackHandlerTest =
+            new IMSAuthenticateLoginCallbackHandler();
 
         Map<String, String> options = new HashMap<String, String>();
         options.put("ims.token.url", "test_url");
@@ -128,5 +130,4 @@ public class IMSAuthenticateLoginCallbackHandlerTest {
         jaasConfigEntries.add(firstItem);
         imsAuthenticateLoginCallbackHandlerTest.configure(null, "OAUTHBEARER", jaasConfigEntries);
     }
-
 }

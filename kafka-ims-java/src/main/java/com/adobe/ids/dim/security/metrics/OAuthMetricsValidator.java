@@ -17,7 +17,7 @@ public class OAuthMetricsValidator implements OAuthMetricsValidatorMBean {
     public OAuthMetricsValidator() {
         this.countOfRequestFailedWithoutScope = 0;
     }
-
+    
     @Override
     public Integer getCountOfRequestFailedWithoutScope() {
         return countOfRequestFailedWithoutScope;

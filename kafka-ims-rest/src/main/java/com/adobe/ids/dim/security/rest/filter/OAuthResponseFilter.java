@@ -23,37 +23,42 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
 
     private static final Logger log = LoggerFactory.getLogger(OAuthResponseFilter.class);
 
-    @Context
-    ResourceInfo resourceInfo;
+    @Context ResourceInfo resourceInfo;
 
     @Override
     public void filter(ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext) throws IOException {
-        log.info("Status Response: " + containerResponseContext.getStatus());
-        if(containerResponseContext.hasEntity()) {
-            log.info("Entity Response: " + containerResponseContext.getEntity().toString());
+        log.debug("Status Response: " + containerResponseContext.getStatus());
+        if (containerResponseContext.hasEntity()) {
+            log.debug("Entity Response: " + containerResponseContext.getEntity().toString());
         }
 
-        if(containerResponseContext.getStatusInfo().getFamily().equals(Response.Status.Family.SUCCESSFUL)) {
+        if (containerResponseContext.getStatusInfo().getFamily().equals(Response.Status.Family.SUCCESSFUL)) {
             IMSRestMetrics.getInstance().incSucessfull(containerRequestContext, resourceInfo);
         } else {
             switch (containerResponseContext.getStatus()) {
-            case 401 : {
+            case 401: {
                 log.debug("Authentication error - Clearing this Principal Context");
                 if (!(containerResponseContext.getEntity() instanceof ErrorMessage)) {
                     cleanContextOfPrincipal(containerRequestContext);
-                    IMSRestMetrics.getInstance().incWithoutScope(containerRequestContext, resourceInfo);
+                    ErrorMessage error = (ErrorMessage) containerResponseContext.getEntity();
+                    if ("required scopes".indexOf(error.getMessage()) > -1) {
+                        IMSRestMetrics.getInstance().incWithoutScope(containerRequestContext, resourceInfo);
+                    } else if ("Expired Token".indexOf(error.getMessage()) > -1) {
+                        IMSRestMetrics.getInstance().incExpiredToken(containerRequestContext, resourceInfo);
+                    }
                 }
             }
             break;
-            case 403 : {
-                log.info("Authorization error! - Add JMX Metrics..");
-                if(ProduceResponse.class.isInstance(containerResponseContext.getEntity())) {
-                    log.info("403: Producer Response Class");
+            case 403: {
+                log.debug("Authorization error! - Add JMX Metrics..");
+                if (ProduceResponse.class.isInstance(containerResponseContext.getEntity())) {
+                    log.debug("403: Producer Response Class");
                     generateMetricsForProducerWithoutAuthorization(containerRequestContext);
-                } else if(ErrorMessage.class.isInstance(containerResponseContext.getEntity())) {
-                    generateMetricsForErrorWithoutAuthorization(containerRequestContext, (ErrorMessage) containerResponseContext.getEntity());
+                } else if (ErrorMessage.class.isInstance(containerResponseContext.getEntity())) {
+                    generateMetricsForErrorWithoutAuthorization(
+                        containerRequestContext, (ErrorMessage) containerResponseContext.getEntity());
                 } else {
-                    log.info("Not mapped Class: " + containerResponseContext.getEntityClass().toString());
+                    log.debug("Not mapped Class: " + containerResponseContext.getEntityClass().toString());
                 }
             }
             }

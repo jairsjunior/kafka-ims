@@ -11,12 +11,14 @@ package com.adobe.ids.dim.security.rest.context;
 
 import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
 import com.adobe.ids.dim.security.rest.config.KafkaOAuthSecurityRestConfig;
-import io.confluent.kafkarest.*;
+import io.confluent.kafkarest.DefaultKafkaRestContext;
+import io.confluent.kafkarest.KafkaRestContext;
+import io.confluent.kafkarest.ScalaConsumersContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 public class KafkaOAuthRestContextFactory {
 
@@ -32,7 +34,11 @@ public class KafkaOAuthRestContextFactory {
         return KafkaOAuthRestContextFactory.instance;
     }
 
-    public KafkaRestContext getContext(final IMSBearerTokenJwt principal, final KafkaOAuthSecurityRestConfig kafkaRestConfig, final String resourceType, final boolean tokenAuth) {
+    public KafkaRestContext getContext(
+        final IMSBearerTokenJwt principal,
+        final KafkaOAuthSecurityRestConfig kafkaRestConfig,
+        final String resourceType,
+        final boolean tokenAuth) {
         log.debug("KafkaOAuthRestContextFactory -- getContext");
         String principalWithResourceType = principal.principalName();
         log.debug("Principal With Resource Type: ", principalWithResourceType);
@@ -42,19 +48,21 @@ public class KafkaOAuthRestContextFactory {
         }
         synchronized (principalWithResourceType) {
             log.debug("create userToContextMap principal: ", principalWithResourceType);
-            final ScalaConsumersContext scalaConsumersContext = new ScalaConsumersContext(kafkaRestConfig);
-            final KafkaRestContext context = new DefaultKafkaRestContext(kafkaRestConfig, null, null, null, scalaConsumersContext);
+            final ScalaConsumersContext scalaConsumersContext =
+                new ScalaConsumersContext(kafkaRestConfig);
+            final KafkaRestContext context =
+                new DefaultKafkaRestContext(kafkaRestConfig, null, null, null, scalaConsumersContext);
             this.userToContextMap.put(principalWithResourceType, context);
         }
         return this.userToContextMap.get(principalWithResourceType);
     }
 
     public void cleanSpecificContext(String principalName) {
-        log.info("Clean specific context with the principal name: " + principalName);
+        log.debug("Clean specific context with the principal name: " + principalName);
         try {
             if (this.userToContextMap.containsKey(principalName)) {
                 this.userToContextMap.remove(principalName).shutdown();
-                log.info("Cleared context: " + principalName);
+                log.debug("Cleared context: " + principalName);
             }
         } catch (Exception e) {
             log.warn("This context no longer exists");
