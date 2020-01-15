@@ -40,41 +40,49 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
     private final Logger log = LoggerFactory.getLogger(IMSAuthenticateValidatorCallbackHandler.class);
 
     public static final String IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG = "ims.token.validation.url";
-    private Map < String, String > moduleOptions = null;
+    private Map<String, String> moduleOptions = null;
     private boolean configured = false;
+    // Used for unit testing the method call on configure()
+    private boolean registerMetrics = true;
     private Time time = Time.SYSTEM;
 
-    //Allowed scopes
+    // Allowed scopes
 
     private static final String DIM_CORE_SCOPE = "dim.core.services";
 
     @Override
-    public void configure(Map < String, ? > map, String saslMechanism, List < AppConfigurationEntry > jaasConfigEntries) {
+    public void configure(Map<String, ?> map, String saslMechanism, List<AppConfigurationEntry> jaasConfigEntries) {
         if (!OAuthBearerLoginModule.OAUTHBEARER_MECHANISM.equals(saslMechanism))
             throw new IllegalArgumentException(String.format("Unexpected SASL mechanism: %s", saslMechanism));
 
-        this.moduleOptions = Collections.unmodifiableMap((Map < String, String > ) jaasConfigEntries.get(0).getOptions());
+        this.moduleOptions = Collections.unmodifiableMap((Map<String, String>) jaasConfigEntries.get(0).getOptions());
 
-        if (!moduleOptions.containsKey(IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG) ||
-                StringsUtil.isNullOrEmpty(moduleOptions.get(IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG))) {
+        if (!moduleOptions.containsKey(IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG)
+                || StringsUtil.isNullOrEmpty(moduleOptions.get(IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG))) {
             throw new IllegalArgumentException("Missing " + IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG + " in jaas config.");
         }
 
         configured = true;
-        registerMetrics();
+        if (registerMetrics) {
+            registerMetrics();
+        }
+    }
+
+    public void setIsRegisterMetrics(boolean registerMetrics) {
+        this.registerMetrics = registerMetrics;
     }
 
     public boolean isConfigured() {
         return this.configured;
     }
 
-
     public void setConfigured(boolean configured) {
         this.configured = configured;
     }
 
     @Override
-    public void close() {}
+    public void close() {
+    }
 
     public void registerMetrics() {
         try {
@@ -97,11 +105,13 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
                     handleCallback(validationCallback);
                 } catch (OAuthBearerIllegalTokenException e) {
                     OAuthBearerValidationResult failureReason = e.reason();
-                    validationCallback.error(failureReason.failureDescription(), failureReason.failureScope(), failureReason.failureOpenIdConfig());
+                    validationCallback.error(failureReason.failureDescription(), failureReason.failureScope(),
+                            failureReason.failureOpenIdConfig());
                 }
             } else if (callback instanceof OAuthBearerExtensionsValidatorCallback) {
                 OAuthBearerExtensionsValidatorCallback extensionsCallback = (OAuthBearerExtensionsValidatorCallback) callback;
-                extensionsCallback.inputExtensions().map().forEach((extensionName, v) -> extensionsCallback.valid(extensionName));
+                extensionsCallback.inputExtensions().map()
+                        .forEach((extensionName, v) -> extensionsCallback.valid(extensionName));
             } else {
                 throw new UnsupportedCallbackException(callback);
             }
@@ -116,7 +126,7 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
 
         IMSBearerTokenJwt token = IMSHttpCalls.validateIMSToken(accessToken, moduleOptions);
 
-        //Check if Token has expired
+        // Check if Token has expired
         long now = time.milliseconds();
 
         log.debug("Token expiration time: {}", token.lifetimeMs());
@@ -126,7 +136,7 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
             OAuthBearerValidationResult.newFailure("Expired Token").throwExceptionIfFailed();
         }
 
-        //Check if we have DIM specific scope in the token or not
+        // Check if we have DIM specific scope in the token or not
         Set<String> scopes = token.scope();
 
         if (!scopes.contains(DIM_CORE_SCOPE)) {
