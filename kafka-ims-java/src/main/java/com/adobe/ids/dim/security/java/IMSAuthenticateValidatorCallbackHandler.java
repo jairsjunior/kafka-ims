@@ -9,8 +9,10 @@
 
 package com.adobe.ids.dim.security.java;
 
-import com.adobe.ids.dim.security.common.exception.IMSValidatorException;
+import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
+import com.adobe.ids.dim.security.common.IMSHttpCalls;
 import com.adobe.ids.dim.security.common.StringsUtil;
+import com.adobe.ids.dim.security.common.exception.IMSValidatorException;
 import com.adobe.ids.dim.security.metrics.OAuthMetricsValidator;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerExtensionsValidatorCallback;
@@ -34,32 +36,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.adobe.ids.dim.security.common.*;
-
 public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCallbackHandler {
+    private static final String IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG = "ims.token.validation.url";
+    private static final String DIM_CORE_SCOPE = "dim.core.services";
     private final Logger log = LoggerFactory.getLogger(IMSAuthenticateValidatorCallbackHandler.class);
-
-    public static final String IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG = "ims.token.validation.url";
-    private Map<String, String> moduleOptions = null;
+    private Map<String, ?> moduleOptions = null;
     private boolean configured = false;
+
     // Used for unit testing the method call on configure()
     private boolean registerMetrics = true;
-    private Time time = Time.SYSTEM;
-
     // Allowed scopes
-
-    private static final String DIM_CORE_SCOPE = "dim.core.services";
+    private Time time = Time.SYSTEM;
 
     @Override
     public void configure(Map<String, ?> map, String saslMechanism, List<AppConfigurationEntry> jaasConfigEntries) {
         if (!OAuthBearerLoginModule.OAUTHBEARER_MECHANISM.equals(saslMechanism))
-            throw new IllegalArgumentException(String.format("Unexpected SASL mechanism: %s", saslMechanism));
+            throw new IllegalArgumentException(
+                String.format("Unexpected SASL mechanism: %s", saslMechanism));
 
-        this.moduleOptions = Collections.unmodifiableMap((Map<String, String>) jaasConfigEntries.get(0).getOptions());
+        this.moduleOptions = Collections.unmodifiableMap(jaasConfigEntries.get(0).getOptions());
 
         if (!moduleOptions.containsKey(IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG)
-                || StringsUtil.isNullOrEmpty(moduleOptions.get(IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG))) {
-            throw new IllegalArgumentException("Missing " + IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG + " in jaas config.");
+                || StringsUtil.isNullOrEmpty(
+                    (String) moduleOptions.get(IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG))) {
+            throw new IllegalArgumentException(
+                "Missing " + IMS_ENDPOINT_TOKEN_VALIDATION_CONFIG + " in jaas config.");
         }
 
         configured = true;
@@ -144,7 +145,11 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
             log.debug("Token doesn't have required scopes! We cannot accept this token");
             log.debug("Required scope is: {}", DIM_CORE_SCOPE);
             log.debug("Token has following scopes: {}", scopes);
-            OAuthBearerValidationResult.newFailure(IMSValidatorException.KAFKA_EXCEPTION_WITHOUT_SCOPE_MSG, "Missing scope "+ DIM_CORE_SCOPE, "").throwExceptionIfFailed();
+            OAuthBearerValidationResult.newFailure(
+                IMSValidatorException.KAFKA_EXCEPTION_WITHOUT_SCOPE_MSG,
+                "Missing scope " + DIM_CORE_SCOPE,
+                "")
+            .throwExceptionIfFailed();
         }
 
         log.debug("Validated IMS Token: {}", token.toString());

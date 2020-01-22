@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -38,6 +37,8 @@ public class OAuthRestProxyUtil {
     private static final String AUTHENTICATION_PREFIX = "Bearer";
 
     public static OAuthRestProxyUtil util;
+    private static Pattern pattern = Pattern.compile("\\[(.*)\\]");
+    @Context ResourceInfo resourceInfoTest;
 
 
     public static OAuthRestProxyUtil getInstance() {
@@ -47,12 +48,8 @@ public class OAuthRestProxyUtil {
         return util;
     }
 
-    @Context
-    ResourceInfo resourceInfoTest;
-
-    private static Pattern pattern = Pattern.compile("\\[(.*)\\]");
-
-    public static IMSBearerTokenJwt getIMSBearerTokenJwtFromBearer(String accessToken) throws IMSRestException {
+    public static IMSBearerTokenJwt getIMSBearerTokenJwtFromBearer(String accessToken)
+    throws IMSRestException {
         IMSBearerTokenJwt token = null;
         try {
             // Get client_id from the token
@@ -63,8 +60,9 @@ public class OAuthRestProxyUtil {
             Map < String, Object > payloadJson = objectMapper.readValue(payLoad, new TypeReference<Map<String, Object>>() {});
             token = new IMSBearerTokenJwt(payloadJson, accessToken);
         } catch (Exception e) {
-            log.info("Cannot parse the token. Invalid Token sent!");
-            throw new IMSRestException(IMSRestException.BEARER_INVALID_TOKEN_CODE, IMSRestException.BEARER_INVALID_TOKEN_MSG);
+            log.debug("Cannot parse the token. Invalid Token sent!");
+            throw new IMSRestException(
+                IMSRestException.BEARER_INVALID_TOKEN_CODE, IMSRestException.BEARER_INVALID_TOKEN_MSG);
         }
         return token;
     }
@@ -85,26 +83,32 @@ public class OAuthRestProxyUtil {
         if(authorizationHeader == null) {
             log.info("Authorization token is null");
             IMSRestMetrics.getInstance().incInvalidToken(containerRequestContext, resourceInfo);
-            throw new IMSRestException(IMSRestException.BEARER_TOKEN_NOT_SENT_CODE, IMSRestException.BEARER_TOKEN_NOT_SENT_MSG);
+            throw new IMSRestException(
+                IMSRestException.BEARER_TOKEN_NOT_SENT_CODE, IMSRestException.BEARER_TOKEN_NOT_SENT_MSG);
         }
         if (authorizationHeader.startsWith(AUTHENTICATION_PREFIX)) {
             String bearer = authorizationHeader.substring(AUTHENTICATION_PREFIX.length()).trim();
             try {
                 return OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer(bearer);
             } catch (IMSRestException e) {
-                log.info("Invalid Token sent!");
+                log.debug("Invalid Token sent!");
                 IMSRestMetrics.getInstance().incInvalidToken(containerRequestContext, resourceInfo);
                 throw e;
             }
         }
-        log.info("Invalid Token sent!");
+        log.debug("Invalid Token sent!");
         IMSRestMetrics.getInstance().incInvalidToken(containerRequestContext, resourceInfo);
-        throw new IMSRestException(IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_CODE, IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_MSG + AUTHENTICATION_PREFIX);
+        throw new IMSRestException(
+            IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_CODE,
+            IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_MSG + AUTHENTICATION_PREFIX);
     }
 
-    public static String getResourceType(final ContainerRequestContext requestContext, ResourceInfo resourceInfo) {
+    public static String getResourceType(
+        final ContainerRequestContext requestContext, ResourceInfo resourceInfo) {
         log.debug("getResourceType");
-        if (ConsumersResource.class.equals(resourceInfo.getResourceClass()) || io.confluent.kafkarest.resources.ConsumersResource.class.equals(resourceInfo.getResourceClass())) {
+        if (ConsumersResource.class.equals(resourceInfo.getResourceClass())
+                || io.confluent.kafkarest.resources.ConsumersResource.class.equals(
+                    resourceInfo.getResourceClass())) {
             log.debug("consumer");
             return "consumer";
         }
@@ -118,7 +122,7 @@ public class OAuthRestProxyUtil {
 
     public static String getTopicProducer(ContainerRequestContext context) {
         String[] path = context.getUriInfo().getPath().split("/");
-        return path[path.length-1];
+        return path[path.length - 1];
     }
 
     public static List<String> extractTopicsFromErrors(String errorMessage) {
@@ -142,12 +146,13 @@ public class OAuthRestProxyUtil {
         return results;
     }
 
-    public static RequestInfo mountResquestInfo(ContainerRequestContext context, ResourceInfo resourceInfo, ErrorMessage error) {
+    public static RequestInfo mountResquestInfo(
+        ContainerRequestContext context, ResourceInfo resourceInfo, ErrorMessage error) {
         String requestType = getResourceType(context, resourceInfo);
         List<String> topic = new ArrayList<>();
         if(requestType.equalsIgnoreCase("producer")) {
             topic.add(getTopicProducer(context));
-        } else if (error != null) {
+        } else if(error != null) {
             topic = extractTopicsFromErrors(error.getMessage());
         }
         return new RequestInfo(requestType, context.getUriInfo().getPath(), topic);

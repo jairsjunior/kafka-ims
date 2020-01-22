@@ -76,6 +76,7 @@ services:
       - schema-registry
     ports:
       - 8082:8082
+      - 10001:10001
     hostname: rest-proxy
     container_name: rest-proxy
     environment:
@@ -89,6 +90,11 @@ services:
       KAFKA_REST_CLIENT_SASL_LOGIN_CALLBACK_HANDLER_CLASS: com.adobe.ids.dim.security.java.IMSAuthenticateLoginCallbackHandler
       KAFKA_REST_IMS_REST_CLIENT_SASL_LOGIN_CALLBACK_HANDLER_CLASS: 'com.adobe.ids.dim.security.rest.IMSAuthenticateRestCallbackHandler'
       KAFKAREST_OPTS: '-Djava.security.auth.login.config=/etc/kafka-rest/kafka_rest_proxy_jaas.conf -javaagent:/usr/share/java/kafka-rest/jolokia-jvm-1.6.2-agent.jar=port=49998,host=0.0.0.0'
+
+      KAFKA_REST_ACCESS_CONTROL_ALLOW_ORIGIN: '*'
+      KAFKA_REST_ACCESS_CONTROL_ALLOW_METHODS: 'GET,POST,PUT,DELETE'
+      KAFKA_REST_ACCESS_CONTROL_ALLOW_HEADERS: 'origin,content-type,accept,authorization'
+
       #Only need for confluentinc/kafka-rest container
       CUB_CLASSPATH: "/etc/confluent/docker/docker-utils.jar:/usr/share/java/kafka-rest/kafka-ims-rest-1.0-SNAPSHOT-jar-with-dependencies.jar -Djava.security.auth.login.config=/etc/kafka-rest/kafka_rest_proxy_jaas.conf"
       ################# log4j ########################
@@ -98,8 +104,8 @@ services:
   hawtio-jmx:
     image: upala-corporation/hawtio-jmx
     build: ./hawtio-jmx/
-    ports: 
-        - 8080:8080
+    ports:
+      - 8080:8080
 
       
 

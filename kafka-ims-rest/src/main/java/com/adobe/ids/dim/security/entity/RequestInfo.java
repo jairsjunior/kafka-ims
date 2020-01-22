@@ -9,7 +9,6 @@
 
 package com.adobe.ids.dim.security.entity;
 
-import javax.ws.rs.container.ContainerRequestContext;
 import java.util.List;
 
 public class RequestInfo {

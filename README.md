@@ -1,12 +1,30 @@
 # kafka-ims plugins
 
-## How to Build
+This is a plugin for use on Confluent's Rest Proxy product. The principal purpose of this plugin is permit to use IMS Authentication server to control authentication and authorization using a BEARER in the header of HTTP call.
 
-TODO
+## Modules
 
-## How to Use
+- kafka-ims-common: Common functions to be used at another modules
+- kafka-ims-java: AuthenticateCallbackHandler implementations used at Kafka broker and by Java Clients to handle IMS Authentication using SASL OAUTHBEARER.
+- kafka-ims-rest: RestResourceExtension and AuthenticateCallbackHandler implementations that add handle of Bearer token sent on HTTP call to connect to a SASL using OAUTHBEREAR secured broker.
+- kafka-ims-sample: Sample implementation of Producer/Consumer Java Clients using the kafka-ims-java dependencies and a swagger-ui project that contains the documentations of kafka-ims-rest calls.
 
-TODO
+## Building the jar files
+
+### Requirements
+
+- JDK 8 or above
+- Maven 3.6 or above
+
+### How to Build all modules
+
+With all requirements installed, we just need to run the command ```mvn -e clean package``` on the root folder *kafka-ims* to generate all modules jar files. The jar files will be on each module folder on the target directory.
+
+### How to Build a single module
+
+With all requirements installed, we just need to run the command ```mvn -e -pl <module-name> -am clean package``` on the root folder *kafka-ims* to generate all modules jar files. The jar files will be at the module folder on the target directory.
+
+Example: To build only the kafka-ims-java module and his dependencies we will be run the command ```mvn -e -pl kafka-ims-java -am clean package```
 
 ## Building the package
 The package is built in docker using modern features.  
@@ -70,3 +88,8 @@ jfrog rt c corp --url=https://artifactory.corp.adobe.com/artifactory --user=$USE
 ```bash
 make deploy
 ```
+
+## Setup Docker Development Ambient
+
+To test this generated jars we have a docker directory at this root project with the instructions to setup
+and run all this components.

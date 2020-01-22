@@ -165,5 +165,4 @@ public class IMSRestMetrics {
             getACLMetricsObject("total-acl-metrics").incACLDeniedACLRequestCount();
         }
     }
-
 }
