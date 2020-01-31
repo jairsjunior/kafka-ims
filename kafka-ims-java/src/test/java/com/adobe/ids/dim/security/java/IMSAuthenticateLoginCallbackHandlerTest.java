@@ -63,6 +63,7 @@ public class IMSAuthenticateLoginCallbackHandlerTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testHandleValidToken() throws IOException, UnsupportedCallbackException {
         when(IMSHttpCalls.getIMSToken(anyMap())).thenReturn(imsBearerTokenJwt);
         handler.handle(callbacks);
@@ -70,6 +71,7 @@ public class IMSAuthenticateLoginCallbackHandlerTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
+    @SuppressWarnings("unchecked")
     public void whenNullTokenPassed_thenIllegalArgumentExceptionIsThrown()
     throws IOException, UnsupportedCallbackException {
         when(IMSHttpCalls.getIMSToken(anyMap())).thenReturn(null);
