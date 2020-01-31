@@ -81,15 +81,15 @@ We created JMX metrics to monitor some behaviours at the broker and kafka-rest. 
 
 # Hawtio
 
-Hawtio is a lightweight and modular Web console with lots of plugins for managing your Java stuff. We using it to watch our metrics at our docker setup.
+Hawtio is a lightweight and modular Web console with lots of plugins for managing Java Applications. We using it to watch our metrics at our docker setup.
 
 ## Accessing the UI
 
-At our docker-compose we started the hawtio in an container and exposed the port *8080* to access the service. You can use the address `http://localhost:8080` to access the application.
+At our docker-compose we started the hawtio in an container and exposed the port *8080* to access the service. You can use the address `http://localhost:8080/hawtio` to access the application.
 
 ## Configuring Remote Metrics
 
-To connect to our another container we need to setup 2 new connections at the Hawtio application, one for the broker and another to kafka-rest. To create a new connection we will use the `Connect` menu at the right side of the screen and click on the `add connection` button.
+To connect to our another container we need to setup 2 new connections at the Hawtio application, one for the broker and another to kafka-rest. To create a new connection we will use the `Connect` menu at the right side of the screen and click on the `Add connection` button.
 
 ### Broker Connection
 
