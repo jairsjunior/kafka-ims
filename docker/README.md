@@ -44,3 +44,81 @@ After this, you can run the `test.sh` file. This file had some basic operations:
     - Set the topic that will be consumed
     - Consume the messages of the topic
     - Delete the consumer instance
+
+# JMX Metrics
+
+We created JMX metrics to monitor some behaviours at the broker and kafka-rest. Above we will detail a little be more this metrics and how to visualize using [Hawtio](https://hawt.io/).
+
+## Broker Metrics
+
+### kafka-broker:name=ims-metrics
+
+- CountOfRequestFailedWithoutScope: Counter of connections using the AuthenticatorCallbackHandler implementation trying to connect with a valid token but without scope
+
+## Kafka-Rest Metrics
+
+### kafka.rest:type=ims-metrics,name=ims-request-metrics-total
+
+- ExpiredTokenErrorCount: Counter of requests made with a expired token
+- InvalidTokenErrorCount: Counter of requests made with a invalid token
+- SuccessfullRequestCount: Counter of requests made with success
+- WithoutScopeErrorCount: Counter of requests trying to connect with a valid token but without scope
+
+### kafka.rest:type=ims-acl-metrics,name=ims-acl-metrics-total
+
+- ACLDeniedRequestCount : Count of requests trying to connect with a valid token but without ACL
+
+### kafka.rest:type=ims-metrics,endpoint=[endpoint-address]
+
+- ExpiredTokenErrorCount: Counter of requests made with a expired token at this endpoint
+- InvalidTokenErrorCount: Counter of requests made with a invalid token at this endpoint
+- SuccessfullRequestCount: Counter of requests made with success at this endpoint
+- WithoutScopeErrorCount: Counter of requests trying to connect with a valid token but without scope at this endpoint
+
+### kafka.rest:type=ims-acl-metrics,topic=[topic-name],endpoint=[endpoint-address]
+
+- ACLDeniedRequestCount : Count of requests trying to connect with a valid token but without ACL by topic and endpoint
+
+# Hawtio
+
+Hawtio is a lightweight and modular Web console with lots of plugins for managing your Java stuff. We using it to watch our metrics at our docker setup.
+
+## Accessing the UI
+
+At our docker-compose we started the hawtio in an container and exposed the port *8080* to access the service. You can use the address `http://localhost:8080` to access the application.
+
+## Configuring Remote Metrics
+
+To connect to our another container we need to setup 2 new connections at the Hawtio application, one for the broker and another to kafka-rest. To create a new connection we will use the `Connect` menu at the right side of the screen and click on the `add connection` button.
+
+### Broker Connection
+
+At the `Add Connection` modal, we will fill the inputs with the above information and click at `Test Connection` button, if everything is right we will receive a message with the text `Connection Sucessful` and we can save this connection using the `Save` button.
+
+- Name: Broker
+- Scheme: http
+- Host: broker
+- Port: 49998
+- Path: /jolokia
+
+### Kafka-Rest Connection
+
+At the `Add Connection` modal, we will fill the inputs with the above information and click at `Test Connection` button, if everything is right we will receive a message with the text `Connection Sucessful` and we can save this connection using the `Save` button.
+
+- Name: Kafka-Rest
+- Scheme: http
+- Host: rest-proxy
+- Port: 49998
+- Path: /jolokia
+
+## Watching Metrics
+
+At the `Connect` menu on the tab Remote now we had 2 connections (Broker,Kafka-Rest). To watch the metric at each one we will use the `Connect` button of each configuration. A new window will be opened and there we had the `JMX` menu with all MBeans registered at this JVM.
+
+### Hawtio Broker Metrics
+
+Our metrics will be at the `kafka-broker` folder on the tree visualization.
+
+### Hawtion Kafka-Rest Metrics
+
+Our metrics will be at the `kafka.rest` folder on the tree visualization. Inside this folder we will had another 2 folders with more specific metrics (ims-acl-metrics, ims-metrics).
