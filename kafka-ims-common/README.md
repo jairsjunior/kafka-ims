@@ -1,9 +1,6 @@
 # Kafka IMS Common
 
-This repository contains some classes that is used as dependecy by another packages implemented by us.
-
-- kafka-ims-java
-- kafka-ims-rest
+This repository contains some classes that are used as dependecies by Java (**kafka-ims-java**) and REST (**kafka-ims-rest**) modules.
 
 ## Contents of this package
 
