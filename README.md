@@ -1,13 +1,13 @@
 # kafka-ims plugins
 
-This is a plugin for use on Confluent's Rest Proxy product. The principal purpose of this plugin is permit to use IMS Authentication server to control authentication and authorization using a BEARER in the header of HTTP call.
+This is a plugin for use on Confluent's Rest Proxy. The principal purpose of this plugin is to use IMS to Authenticate a valid  user and then Authorize the user to perform topic level operations using `SimpleAclAuthorizer` plugin. For Java clients, this works by passing valid JAAS configurations. REST clients are expected to pass the IMS token using Authorization header in the HTTP calls.
 
 ## Modules
 
 - kafka-ims-common: Common functions to be used at another modules
-- kafka-ims-java: AuthenticateCallbackHandler implementations used at Kafka broker and by Java Clients to handle IMS Authentication using SASL OAUTHBEARER.
-- kafka-ims-rest: RestResourceExtension and AuthenticateCallbackHandler implementations that add handle of Bearer token sent on HTTP call to connect to a SASL using OAUTHBEREAR secured broker.
-- kafka-ims-sample: Sample implementation of Producer/Consumer Java Clients using the kafka-ims-java dependencies and a swagger-ui project that contains the documentations of kafka-ims-rest calls.
+- kafka-ims-java: AuthenticateCallbackHandler implementations used at Kafka broker and by Java Clients to handle IMS Authentication using OAUTHBEREAR implementation of SASL.
+- kafka-ims-rest: RestResourceExtension and AuthenticateCallbackHandler implementations that handle the Bearer token sent on HTTP call. REST Proxy then connects to secure broker using OAUTHBEREAR implementation of SASL.
+- kafka-ims-sample: Sample Producer/Consumer Java Clients using the above plugins.
 
 ## Building the jar files
 
@@ -18,7 +18,7 @@ This is a plugin for use on Confluent's Rest Proxy product. The principal purpos
 
 ### How to Build all modules
 
-With all requirements installed, we just need to run the command ```mvn -e clean package``` on the root folder *kafka-ims* to generate all modules jar files. The jar files will be on each module folder on the target directory.
+With all requirements installed, we just need to run the command ```mvn -e clean package``` on the project root folder **kafka-ims** to generate all modules jar files. The jar files will be on each module folder on the target directory.
 
 ### How to Build a single module
 
