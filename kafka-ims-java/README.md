@@ -29,7 +29,7 @@ KafkaServer {
 
 ## Configure clients
 
-* Add fat jar that is created after building the module (kafka-ims-java-1.0-SNAPSHOT-jar-with-dependencies.jar, for example) to the classpath of the client.
+* Add fat jar that is created after building the module (kafka-ims-uber-client-\<version\>.jar) to the classpath of the client.
 * Java clients need to set following properties in the code (or via settings).
 
 | Property | Value |
