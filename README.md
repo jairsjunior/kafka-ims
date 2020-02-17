@@ -8,6 +8,7 @@ This is a plugin for use on Confluent's Rest Proxy. The principal purpose of thi
 - kafka-ims-java: AuthenticateCallbackHandler implementations used at Kafka broker and by Java Clients to handle IMS Authentication using OAUTHBEREAR implementation of SASL.
 - kafka-ims-rest: RestResourceExtension and AuthenticateCallbackHandler implementations that handle the Bearer token sent on HTTP call. REST Proxy then connects to secure broker using OAUTHBEREAR implementation of SASL.
 - kafka-ims-sample: Sample Producer/Consumer Java Clients using the above plugins.
+- docker: Build a Containerized Development Environment to test the plugins.
 
 ## Building the jar files
 
@@ -88,8 +89,3 @@ jfrog rt c corp --url=https://artifactory.corp.adobe.com/artifactory --user=$USE
 ```bash
 make deploy
 ```
-
-## Setup Docker Development Ambient
-
-To test this generated jars we have a docker directory at this root project with the instructions to setup
-and run all this components.
