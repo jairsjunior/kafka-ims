@@ -23,7 +23,7 @@ With all requirements installed, we just need to run the command ```mvn -e clean
 
 ### How to Build a single module
 
-With all requirements installed, we just need to run the command ```mvn -e -pl <module-name> -am clean package``` on the root folder *kafka-ims* to generate all modules jar files. The jar files will be at the module folder on the target directory.
+With all requirements installed, we just need to run the command ```mvn -e -pl <module-name> -am clean package``` on the project root folder **kafka-ims** to generate artifacts for that module. The jar files will be generated in the **target** directory of the module.
 
 Example: To build only the kafka-ims-java module and his dependencies we will be run the command ```mvn -e -pl kafka-ims-java -am clean package```
 
