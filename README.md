@@ -1,6 +1,6 @@
 # kafka-ims plugins
 
-This is a plugin for use on Confluent's Rest Proxy. The principal purpose of this plugin is to use IMS to Authenticate a valid  user and then Authorize the user to perform topic level operations using `SimpleAclAuthorizer` plugin. For Java clients, this works by passing valid JAAS configurations. REST clients are expected to pass the IMS token using Authorization header in the HTTP calls.
+These are the plugins for use on Confluent's Rest Proxy. The principal purpose of these plugins is to use IMS to Authenticate a valid  user and then Authorize the user to perform topic level operations using `SimpleAclAuthorizer` plugin. For Java clients, this works by passing valid JAAS configurations. REST clients are expected to pass the IMS token using Authorization header in the HTTP calls.
 
 ## Architecture
 
