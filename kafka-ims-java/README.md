@@ -9,6 +9,8 @@ List of jar files needed:
 
   * kafka-ims-common-\<version\>.jar
   * kafka-ims-java-\<version\>.jar
+  
+Note that these jars are deployed by installing kafka-ims-java-\<version\>.noarch.rpm on brokers.
 
 * Start the brokers with following JAAS configuration. IMS token validation URL depends on the environment.
 
@@ -29,7 +31,7 @@ KafkaServer {
 
 ## Configure clients
 
-* Add fat jar that is created after building the module (kafka-ims-uber-client-\<version\>.jar) to the classpath of the client.
+* Add fat jar that is created after building the module (kafka-ims-uber-client-\<version\>.jar) to the classpath of the client. Note that this jar is deployed by installing kafka-ims-uber-client-\<version\>.noarch.rpm on the client.
 * Java clients need to set following properties in the code (or via settings).
 
 | Property | Value |
