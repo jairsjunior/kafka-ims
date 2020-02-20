@@ -9,6 +9,8 @@ This is a plugin for use at Confluent Rest Proxy product. The principal purpose 
   * kafka-ims-common-\<version\>.jar
   * kafka-ims-java-\<version\>.jar
   * kafka-ims-rest-\<version\>.jar
+  
+Note that these jars are deployed by installing kafka-ims-rest-server-\<version\>.noarch.rpm on REST Proxy.
 
 * Add following properties.
 
