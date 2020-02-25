@@ -38,14 +38,20 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
             switch (containerResponseContext.getStatus()) {
             case 401: {
                 log.debug("Authentication error - Clearing this Principal Context");
-                if (!(containerResponseContext.getEntity() instanceof ErrorMessage)) {
-                    cleanContextOfPrincipal(containerRequestContext);
+                cleanContextOfPrincipal(containerRequestContext);
+                if (ProduceResponse.class.isInstance(containerResponseContext.getEntity())) {
+                    ProduceResponse produceResponse = (ProduceResponse) containerResponseContext.getEntity();
+                    log.error("Authentication 401 -- Producer Response");
+                    log.error(produceResponse.toString());
+                } else if (ErrorMessage.class.isInstance(containerResponseContext.getEntity())) {
                     ErrorMessage error = (ErrorMessage) containerResponseContext.getEntity();
                     if ("required scopes".indexOf(error.getMessage()) > -1) {
                         IMSRestMetrics.getInstance().incWithoutScope(containerRequestContext, resourceInfo);
                     } else if ("Expired Token".indexOf(error.getMessage()) > -1) {
                         IMSRestMetrics.getInstance().incExpiredToken(containerRequestContext, resourceInfo);
                     }
+                } else {
+                    log.error("Not mapped Class: " + containerResponseContext.getEntityClass().toString());
                 }
             }
             break;
@@ -65,9 +71,13 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
         }
     }
 
-    private void cleanContextOfPrincipal(ContainerRequestContext context) throws IMSRestException {
-        IMSBearerTokenJwt token = OAuthRestProxyUtil.getBearerInformation(context, resourceInfo);
-        KafkaOAuthRestContextFactory.getInstance().cleanSpecificContext(token.principalName());
+    private void cleanContextOfPrincipal(ContainerRequestContext context) {
+        try{
+            IMSBearerTokenJwt token = OAuthRestProxyUtil.getBearerInformation(context, resourceInfo);
+            KafkaOAuthRestContextFactory.getInstance().cleanSpecificContext(token.principalName());
+        }catch (Exception e){
+            log.error("Could not clean context of principal: ", e);
+        }
     }
 
     private void generateMetricsForProducerWithoutAuthorization(ContainerRequestContext context) {
