@@ -75,7 +75,7 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
         try{
             IMSBearerTokenJwt token = OAuthRestProxyUtil.getBearerInformation(context, resourceInfo);
             KafkaOAuthRestContextFactory.getInstance().cleanSpecificContext(token.principalName());
-        }catch (Exception e){
+        }catch (IMSRestException e){
             log.error("Could not clean context of principal: ", e);
         }
     }
