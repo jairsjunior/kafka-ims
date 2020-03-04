@@ -51,7 +51,7 @@ We created JMX metrics to monitor some behaviours at the broker and kafka-rest. 
 
 ## Broker Metrics
 
-### kafka-broker:name=ims-metrics
+### kafka.broker:name=ims-metrics
 
 - CountOfRequestFailedWithoutScope: Counter of connections using the AuthenticatorCallbackHandler implementation trying to connect with a valid token but without scope
 
