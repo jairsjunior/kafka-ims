@@ -87,9 +87,9 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
 
     public void registerMetrics() {
         try {
-            MBeanServer platformMBeanServer = ManagementFactory.getPlatformMBeanServer();
-            ObjectName objectName = new ObjectName("kafka-broker:name=ims-metrics");
-            platformMBeanServer.registerMBean(OAuthMetricsValidator.getInstance(), objectName);
+            StringBuilder str = new StringBuilder("kafka.broker");
+            str.append(":name=").append("ims-metrics");
+            ManagementFactory.getPlatformMBeanServer().registerMBean(OAuthMetricsValidator.getInstance(), new ObjectName(str.toString()));
         } catch (Exception e) {
             log.error("Error on register MBean Server for JMX metrics");
         }

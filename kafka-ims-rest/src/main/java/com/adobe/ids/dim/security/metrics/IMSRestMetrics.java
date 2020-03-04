@@ -148,7 +148,7 @@ public class IMSRestMetrics {
 
     public void incWithoutScope(ContainerRequestContext context, ResourceInfo resourceInfo) {
         String uniqueName = checkAndCreateByContext(context, resourceInfo);
-        getMetricsObject(uniqueName).incCountOfRequestFailedInvalidToken();
+        getMetricsObject(uniqueName).incCountOfRequestsFailedWithoutScope();
         getMetricsObject("total-request-metrics").incCountOfRequestsFailedWithoutScope();
     }
 

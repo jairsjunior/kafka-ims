@@ -43,10 +43,17 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
                     ProduceResponse produceResponse = (ProduceResponse) containerResponseContext.getEntity();
                     log.error("Authentication 401 -- Producer Response");
                     log.error(produceResponse.toString());
+                    if(!produceResponse.getOffsets().isEmpty()){
+                        if (produceResponse.getOffsets().get(0).getError() != null && produceResponse.getOffsets().get(0).getError().contains("required scopes")){
+                            IMSRestMetrics.getInstance().incWithoutScope(containerRequestContext, resourceInfo);
+                            throw new IMSRestException(IMSRestException.JWT_WITHOUT_SCOPE_ERROR_CODE, IMSRestException.JWT_WITHOUT_SCOPE_ERROR_MSG);
+                        }
+                    }
                 } else if (ErrorMessage.class.isInstance(containerResponseContext.getEntity())) {
                     ErrorMessage error = (ErrorMessage) containerResponseContext.getEntity();
                     if ("required scopes".indexOf(error.getMessage()) > -1) {
                         IMSRestMetrics.getInstance().incWithoutScope(containerRequestContext, resourceInfo);
+                        throw new IMSRestException(IMSRestException.JWT_WITHOUT_SCOPE_ERROR_CODE, error.getMessage());
                     } else if ("Expired Token".indexOf(error.getMessage()) > -1) {
                         IMSRestMetrics.getInstance().incExpiredToken(containerRequestContext, resourceInfo);
                     }
@@ -67,13 +74,18 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
                     log.debug("Not mapped Class: " + containerResponseContext.getEntityClass().toString());
                 }
             }
+            default: {
+                log.error("Authentication/Authorization failed!");
+                log.error("statusCode=" + containerResponseContext.getStatus());
+                log.error("responseObject=" + containerResponseContext.getEntity().toString());
+            }
             }
         }
     }
 
     private void cleanContextOfPrincipal(ContainerRequestContext context) {
         try{
-            IMSBearerTokenJwt token = OAuthRestProxyUtil.getBearerInformation(context, resourceInfo);
+            IMSBearerTokenJwt token = OAuthRestProxyUtil.getBearerInformation(context, resourceInfo, false);
             KafkaOAuthRestContextFactory.getInstance().cleanSpecificContext(token.principalName());
         }catch (IMSRestException e){
             log.error("Could not clean context of principal: ", e);

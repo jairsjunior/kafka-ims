@@ -79,10 +79,16 @@ public class OAuthRestProxyUtil {
     }
 
     public static IMSBearerTokenJwt getBearerInformation(ContainerRequestContext containerRequestContext, ResourceInfo resourceInfo) throws IMSRestException {
+        return getBearerInformation(containerRequestContext, resourceInfo, true);
+    }
+
+    public static IMSBearerTokenJwt getBearerInformation(ContainerRequestContext containerRequestContext, ResourceInfo resourceInfo, boolean withMetrics) throws IMSRestException {
         String authorizationHeader = containerRequestContext.getHeaderString("Authorization");
         if(authorizationHeader == null) {
             log.info("Authorization token is null");
-            IMSRestMetrics.getInstance().incInvalidToken(containerRequestContext, resourceInfo);
+            if(withMetrics){
+                IMSRestMetrics.getInstance().incInvalidToken(containerRequestContext, resourceInfo);
+            }
             throw new IMSRestException(
                 IMSRestException.BEARER_TOKEN_NOT_SENT_CODE, IMSRestException.BEARER_TOKEN_NOT_SENT_MSG);
         }
@@ -92,12 +98,16 @@ public class OAuthRestProxyUtil {
                 return OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer(bearer);
             } catch (IMSRestException e) {
                 log.debug("Invalid Token sent!");
-                IMSRestMetrics.getInstance().incInvalidToken(containerRequestContext, resourceInfo);
+                if (withMetrics) {
+                    IMSRestMetrics.getInstance().incInvalidToken(containerRequestContext, resourceInfo);
+                }
                 throw e;
             }
         }
         log.debug("Invalid Token sent!");
-        IMSRestMetrics.getInstance().incInvalidToken(containerRequestContext, resourceInfo);
+        if (withMetrics) {
+            IMSRestMetrics.getInstance().incInvalidToken(containerRequestContext, resourceInfo);
+        }
         throw new IMSRestException(
             IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_CODE,
             IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_MSG + AUTHENTICATION_PREFIX);
