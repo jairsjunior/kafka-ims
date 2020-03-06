@@ -12,6 +12,7 @@ package com.adobe.ids.dim.security.java;
 import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
 import com.adobe.ids.dim.security.common.IMSHttpCalls;
 import com.adobe.ids.dim.security.common.StringsUtil;
+import com.adobe.ids.dim.security.common.exception.IMSRestException;
 import com.adobe.ids.dim.security.common.exception.IMSValidatorException;
 import com.adobe.ids.dim.security.metrics.OAuthMetricsValidator;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
@@ -134,7 +135,7 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
 
         if (now > token.lifetimeMs()) {
             log.debug("Token has expired! Needs refresh");
-            OAuthBearerValidationResult.newFailure("Expired Token").throwExceptionIfFailed();
+            OAuthBearerValidationResult.newFailure(IMSRestException.BEARER_TOKEN_EXPIRED_MSG).throwExceptionIfFailed();
         }
 
         // Check if we have DIM specific scope in the token or not
