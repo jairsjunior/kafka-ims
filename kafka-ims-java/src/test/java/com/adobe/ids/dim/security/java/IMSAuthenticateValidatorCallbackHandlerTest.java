@@ -28,8 +28,6 @@ import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 
 import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
 import com.adobe.ids.dim.security.common.IMSHttpCalls;
-import com.adobe.ids.dim.security.common.exception.IMSRestException;
-import com.adobe.ids.dim.security.common.exception.IMSValidatorException;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerValidatorCallback;
 import org.junit.Before;
 import org.junit.Test;
@@ -111,7 +109,7 @@ public class IMSAuthenticateValidatorCallbackHandlerTest {
     public void testTokenExpiry() throws IOException, UnsupportedCallbackException {
         when(IMSHttpCalls.validateIMSToken("token", null)).thenReturn(expiredJwtToken);
         handler.handle(callbacks);
-        assertEquals(((OAuthBearerValidatorCallback) callbacks[0]).errorStatus(), IMSRestException.BEARER_TOKEN_EXPIRED_MSG);
+        assertEquals(((OAuthBearerValidatorCallback) callbacks[0]).errorStatus(), "Expired Token");
     }
 
     @Test
@@ -119,7 +117,7 @@ public class IMSAuthenticateValidatorCallbackHandlerTest {
         when(IMSHttpCalls.validateIMSToken("token", null)).thenReturn(invalidScopeJwt);
         handler.handle(callbacks);
         assertEquals(((OAuthBearerValidatorCallback) callbacks[0]).errorStatus(),
-                IMSValidatorException.KAFKA_EXCEPTION_WITHOUT_SCOPE_MSG);
+                     "Token doesn't have required scopes! We cannot accept this token. Please work with DIM team to get needed scopes added");
     }
 
     @Test
