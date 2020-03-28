@@ -28,6 +28,9 @@ public class IMSRestException extends RestException {
     public static int BEARER_IS_NOT_INSTANCE_IMS_JWT_CODE = 401006;
     public static String REST_CONFIGURATION_ERROR_MSG = "Problem creating REST config object: ";
     public static int REST_CONFIGURATION_ERROR_CODE = 401007;
+    public static String JWT_WITHOUT_SCOPE_ERROR_MSG = "Token doesn't have required scopes! We cannot accept this token. Please work with DIM team to get needed scopes added.";
+    public static int JWT_WITHOUT_SCOPE_ERROR_CODE = 401001;
+
 
     public IMSRestException(int errCode, String message) {
     super(message, Response.SC_UNAUTHORIZED, errCode);
