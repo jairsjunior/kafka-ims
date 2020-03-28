@@ -9,9 +9,10 @@
 
 package com.adobe.ids.dim.security.common.exception;
 
-import io.confluent.rest.exceptions.RestNotAuthorizedException;
+import io.confluent.rest.exceptions.RestException;
+import org.eclipse.jetty.server.Response;
 
-public class IMSRestException extends RestNotAuthorizedException {
+public class IMSRestException extends RestException {
 
     public static String BEARER_TOKEN_NOT_SENT_MSG = "Authorization Bearer Token not sent";
     public static int BEARER_TOKEN_NOT_SENT_CODE = 401002;
@@ -29,6 +30,10 @@ public class IMSRestException extends RestNotAuthorizedException {
     public static int REST_CONFIGURATION_ERROR_CODE = 401007;
 
     public IMSRestException(int errCode, String message) {
-        super("Error Code: " + String.valueOf(errCode) + ", Error Message: " + message, errCode);
+    super(message, Response.SC_UNAUTHORIZED, errCode);
+    }
+
+    public IMSRestException(int errCode, int statusCode, String message) {
+        super(message, statusCode ,errCode);
     }
 }

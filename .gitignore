@@ -27,3 +27,5 @@ node_modules/
 
 ### Temporary project files
 old/
+docker/local-*
+docker/test-*

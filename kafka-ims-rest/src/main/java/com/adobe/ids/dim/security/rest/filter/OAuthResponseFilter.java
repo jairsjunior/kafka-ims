@@ -1,13 +1,12 @@
 package com.adobe.ids.dim.security.rest.filter;
 
 import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
+import com.adobe.ids.dim.security.common.StringsUtil;
 import com.adobe.ids.dim.security.common.exception.IMSRestException;
-import com.adobe.ids.dim.security.common.exception.IMSValidatorException;
 import com.adobe.ids.dim.security.entity.RequestInfo;
 import com.adobe.ids.dim.security.metrics.IMSRestMetrics;
 import com.adobe.ids.dim.security.rest.context.KafkaOAuthRestContextFactory;
 import com.adobe.ids.dim.security.util.OAuthRestProxyUtil;
-import io.confluent.kafkarest.entities.PartitionOffset;
 import io.confluent.kafkarest.entities.ProduceResponse;
 import io.confluent.rest.entities.ErrorMessage;
 import org.slf4j.Logger;
@@ -19,7 +18,7 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
+import java.util.Map;
 
 public class OAuthResponseFilter implements ContainerResponseFilter {
 
@@ -28,7 +27,7 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
     @Context ResourceInfo resourceInfo;
 
     @Override
-    public void filter(ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext) throws IOException {
+    public void filter(ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext){
         log.debug("Status Response: " + containerResponseContext.getStatus());
         if (containerResponseContext.hasEntity()) {
             log.debug("Entity Response: " + containerResponseContext.getEntity().toString());
@@ -38,20 +37,47 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
             IMSRestMetrics.getInstance().incSucessfull(containerRequestContext, resourceInfo);
         } else {
             switch (containerResponseContext.getStatus()) {
-            case 401: {
-                log.debug("Authentication error");
-                handleAuthenticationErrorCodeResponse(containerRequestContext, containerResponseContext);
-            }
-            break;
-            case 403: {
-                log.debug("Authorization error");
-                handleAuthorizationErrorCodeResponse(containerRequestContext, containerResponseContext);
-            }
-            default: {
-                log.error("Authentication/Authorization error:");
-                log.error("statusCode=" + containerResponseContext.getStatus());
-                log.error("responseObject=" + containerResponseContext.getEntity().toString());
-            }
+                case 401: {
+                    log.debug("Authentication error - Clearing this Principal Context");
+                    cleanContextOfPrincipal(containerRequestContext);
+                    generateAuthenticationException(containerRequestContext, containerResponseContext);
+                }
+                break;
+                case 403: {
+                    log.debug("Authorization error! - Add JMX Metrics..");
+                    if (ProduceResponse.class.isInstance(containerResponseContext.getEntity())) {
+                        log.debug("403: Producer Response Class");
+                        generateMetricsForProducerWithoutAuthorization(containerRequestContext);
+                        ProduceResponse produceResponse = (ProduceResponse) containerResponseContext.getEntity();
+                        if(!produceResponse.getOffsets().isEmpty()){
+                            Map<String, Object> errorResponse = StringsUtil.jsonStringToMap(produceResponse.getOffsets().get(0).getError());
+                            if (errorResponse != null) {
+                                StringBuffer sbuffer = new StringBuffer();
+                                sbuffer.append(errorResponse.get("status")).append(" ").append(errorResponse.get("scope"));
+                                throw new IMSRestException(produceResponse.getOffsets().get(0).getErrorCode(), containerResponseContext.getStatus(), sbuffer.toString());
+                            }else{
+                                throw new IMSRestException(produceResponse.getOffsets().get(0).getErrorCode(), containerResponseContext.getStatus(), produceResponse.getOffsets().get(0).getError());
+                            }
+                        }
+                    } else if (ErrorMessage.class.isInstance(containerResponseContext.getEntity())) {
+                        generateMetricsForErrorWithoutAuthorization(
+                                containerRequestContext, (ErrorMessage) containerResponseContext.getEntity());
+                    } else {
+                        log.error("Not mapped Class: " + containerResponseContext.getEntityClass().toString());
+                    }
+                }
+                break;
+                default: {
+                    log.error("Authentication/Authorization failed!");
+                    log.error("statusCode=" + containerResponseContext.getStatus());
+                    log.error("class=" + containerResponseContext.getEntityClass().getCanonicalName());
+                    log.error("responseObject=" + containerResponseContext.getEntity().toString());
+                    if (ProduceResponse.class.isInstance(containerResponseContext.getEntity())) {
+                        ProduceResponse produceResponse = (ProduceResponse) containerResponseContext.getEntity();
+                        throw new IMSRestException(produceResponse.getOffsets().get(0).getErrorCode(), containerResponseContext.getStatus(), produceResponse.getOffsets().get(0).getError());
+                    }
+                }
+                break;
             }
         }
     }
@@ -75,54 +101,34 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
         IMSRestMetrics.getInstance().incACLDenied(context, resourceInfo, req.getTopics());
     }
 
-    private void handleAuthenticationErrorCodeResponse(ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext){
-        log.debug("Authentication error - Clearing this Principal Context");
-        cleanContextOfPrincipal(containerRequestContext);
-        ErrorMessage error = null;
+    private void generateAuthenticationException(ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext){
         if (ProduceResponse.class.isInstance(containerResponseContext.getEntity())) {
             ProduceResponse produceResponse = (ProduceResponse) containerResponseContext.getEntity();
-            log.debug("Authentication 401 -- Producer Response");
-            log.debug(produceResponse.toString());
-            if(!produceResponse.getOffsets().isEmpty() && produceResponse.getOffsets().get(0).getError() != null){
-                PartitionOffset partitionOffset = produceResponse.getOffsets().get(0);
-                error = new ErrorMessage(partitionOffset.getErrorCode(), partitionOffset.getError());
-            }else{
-                log.error("Authentication 401 -- Producer Response is not Empty, but the first element is not an error");
-                return;
+            log.error("Authentication 401 -- Producer Response");
+            log.error(produceResponse.toString());
+            if(!produceResponse.getOffsets().isEmpty()){
+                if (produceResponse.getOffsets().get(0).getError() != null && produceResponse.getOffsets().get(0).getError().contains("required scopes")){
+                    IMSRestMetrics.getInstance().incWithoutScope(containerRequestContext, resourceInfo);
+                    Map<String, Object> errorResponse = StringsUtil.jsonStringToMap(produceResponse.getOffsets().get(0).getError());
+                    if (errorResponse != null) {
+                        StringBuffer sbuffer = new StringBuffer();
+                        sbuffer.append(errorResponse.get("status")).append(" ").append(errorResponse.get("scope"));
+                        throw new IMSRestException(produceResponse.getOffsets().get(0).getErrorCode(), sbuffer.toString());
+                    }else{
+                        throw new IMSRestException(produceResponse.getOffsets().get(0).getErrorCode(), produceResponse.getOffsets().get(0).getError());
+                    }
+                }
             }
         } else if (ErrorMessage.class.isInstance(containerResponseContext.getEntity())) {
-            error = (ErrorMessage) containerResponseContext.getEntity();
+            ErrorMessage error = (ErrorMessage) containerResponseContext.getEntity();
+            if ("required scopes".indexOf(error.getMessage()) > -1) {
+                IMSRestMetrics.getInstance().incWithoutScope(containerRequestContext, resourceInfo);
+            } else if ("Expired Token".indexOf(error.getMessage()) > -1) {
+                IMSRestMetrics.getInstance().incExpiredToken(containerRequestContext, resourceInfo);
+            }
         } else {
             log.error("Not mapped Class: " + containerResponseContext.getEntityClass().toString());
-            return;
-        }
-
-        if (IMSValidatorException.KAFKA_EXCEPTION_WITHOUT_SCOPE_MSG.indexOf(error.getMessage()) > -1) {
-            // Needed to change the error response to IMSRestException on Kafka Rest
-            // and Collect Without Scope Metrics
-            IMSRestMetrics.getInstance().incWithoutScope(containerRequestContext, resourceInfo);
-            throw new IMSRestException(error.getErrorCode(), error.getMessage());
-        } else if (IMSRestException.BEARER_TOKEN_EXPIRED_MSG.indexOf(error.getMessage()) > -1) {
-            IMSRestMetrics.getInstance().incExpiredToken(containerRequestContext, resourceInfo);
         }
     }
 
-    private void handleAuthorizationErrorCodeResponse(ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext){
-        if (ProduceResponse.class.isInstance(containerResponseContext.getEntity())) {
-            log.debug("Authorization 403 -- Producer Response");
-            generateMetricsForProducerWithoutAuthorization(containerRequestContext);
-            //Needed to change the error from ProduceResponse to IMSRestException response on Kafka Rest
-            ProduceResponse produceResponse = (ProduceResponse) containerResponseContext.getEntity();
-            if(!produceResponse.getOffsets().isEmpty() && produceResponse.getOffsets().get(0).getError() != null){
-                throw new IMSRestException(produceResponse.getOffsets().get(0).getErrorCode(), produceResponse.getOffsets().get(0).getError());
-            }else{
-                log.error("Authorization 403 -- Producer Response is not Empty, but the first element is not an error");
-            }
-        } else if (ErrorMessage.class.isInstance(containerResponseContext.getEntity())) {
-            generateMetricsForErrorWithoutAuthorization(
-                    containerRequestContext, (ErrorMessage) containerResponseContext.getEntity());
-        } else {
-            log.debug("Not mapped Class: " + containerResponseContext.getEntityClass().toString());
-        }
-    }
 }

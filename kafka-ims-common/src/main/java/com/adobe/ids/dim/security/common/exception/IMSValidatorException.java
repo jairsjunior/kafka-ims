@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 public class IMSValidatorException extends AuthorizationException {
 
     public static String KAFKA_EXCEPTION_WITHOUT_SCOPE_MSG =
-        "Token doesn't have required scopes! We cannot accept this token. Please work with DIM team to get needed scopes added";
+        "Token doesn't have required scopes! We cannot accept this token. Please work with DIM team to get needed scopes added.";
     private final Logger log = LoggerFactory.getLogger(IMSValidatorException.class);
 
     public IMSValidatorException(String message) {
