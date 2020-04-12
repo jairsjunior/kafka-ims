@@ -57,6 +57,7 @@ public class IMSAuthenticateValidatorCallbackHandlerTest {
     IMSAuthenticateValidatorCallbackHandler handler;
     Callback[] callbacks;
     IMSBearerTokenJwt imsBearerValidTokenJwt, expiredJwtToken, invalidScopeJwt;
+    Exception invalidTokenDuringValidation;
 
     @Before
     public void setUp() {
@@ -96,28 +97,38 @@ public class IMSAuthenticateValidatorCallbackHandlerTest {
         jwtToken.put("scope", "dim.core.ser");
 
         invalidScopeJwt = new IMSBearerTokenJwt(jwtToken, randomAccessToken);
+
+        invalidTokenDuringValidation = new Exception("Invalid IMS Token");
     }
 
     @Test
-    public void testValidToken() throws IOException, UnsupportedCallbackException {
+    public void testValidToken() throws IOException, UnsupportedCallbackException, Exception {
         when(IMSHttpCalls.validateIMSToken("token", null)).thenReturn(imsBearerValidTokenJwt);
         handler.handle(callbacks);
         assertNotNull(((OAuthBearerValidatorCallback) callbacks[0]).token());
     }
 
     @Test
-    public void testTokenExpiry() throws IOException, UnsupportedCallbackException {
+    public void testTokenExpiry() throws IOException, UnsupportedCallbackException, Exception {
         when(IMSHttpCalls.validateIMSToken("token", null)).thenReturn(expiredJwtToken);
         handler.handle(callbacks);
         assertEquals(((OAuthBearerValidatorCallback) callbacks[0]).errorStatus(), "Expired Token");
     }
 
     @Test
-    public void testInvalidScope() throws IOException, UnsupportedCallbackException {
+    public void testInvalidScope() throws IOException, UnsupportedCallbackException, Exception {
         when(IMSHttpCalls.validateIMSToken("token", null)).thenReturn(invalidScopeJwt);
         handler.handle(callbacks);
         assertEquals(((OAuthBearerValidatorCallback) callbacks[0]).errorStatus(),
                      "Token doesn't have required scopes! We cannot accept this token. Please work with DIM team to get needed scopes added.");
+    }
+
+    @Test
+    public void testInvalidTokenValidation() throws IOException, UnsupportedCallbackException, Exception {
+        when(IMSHttpCalls.validateIMSToken("token", null)).thenThrow(invalidTokenDuringValidation);
+        handler.handle(callbacks);
+        assertEquals(((OAuthBearerValidatorCallback) callbacks[0]).errorStatus(),
+                "Invalid IMS Token");
     }
 
     @Test

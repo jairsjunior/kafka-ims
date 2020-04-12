@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Mockito.when;
@@ -42,6 +43,7 @@ public class IMSAuthenticateLoginCallbackHandlerTest {
     IMSAuthenticateLoginCallbackHandler handler;
     Callback[] callbacks;
     IMSBearerTokenJwt imsBearerTokenJwt;
+    Exception invalidResponseDuringLogin;
 
     @Before
     public void setUp() {
@@ -60,11 +62,13 @@ public class IMSAuthenticateLoginCallbackHandlerTest {
 
         String randomAccessToken = "asdjfklsdfoeuirrnmncxoiuereklr";
         imsBearerTokenJwt = new IMSBearerTokenJwt(jwtToken, randomAccessToken);
+
+        invalidResponseDuringLogin = new Exception("Response NULL at getIMSToken");
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testHandleValidToken() throws IOException, UnsupportedCallbackException {
+    public void testHandleValidToken() throws IOException, UnsupportedCallbackException, Exception {
         when(IMSHttpCalls.getIMSToken(anyMap())).thenReturn(imsBearerTokenJwt);
         handler.handle(callbacks);
         assertNotNull(((OAuthBearerTokenCallback) callbacks[0]).token());
@@ -73,8 +77,16 @@ public class IMSAuthenticateLoginCallbackHandlerTest {
     @Test(expected = IllegalArgumentException.class)
     @SuppressWarnings("unchecked")
     public void whenNullTokenPassed_thenIllegalArgumentExceptionIsThrown()
-    throws IOException, UnsupportedCallbackException {
+    throws IOException, UnsupportedCallbackException, Exception {
         when(IMSHttpCalls.getIMSToken(anyMap())).thenReturn(null);
+        handler.handle(callbacks);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    @SuppressWarnings("unchecked")
+    public void testHandleExceptionReturn()
+    throws IOException, UnsupportedCallbackException, Exception {
+        when(IMSHttpCalls.getIMSToken(anyMap())).thenThrow(invalidResponseDuringLogin);
         handler.handle(callbacks);
     }
 

@@ -45,7 +45,7 @@ public class IMSHttpCalls {
     private static Time time = Time.SYSTEM;
     private static Random rdm = new Random();
 
-    public static IMSBearerTokenJwt getIMSToken(Map<String, ?> configOptions) {
+    public static IMSBearerTokenJwt getIMSToken(Map<String, ?> configOptions) throws Exception {
         IMSBearerTokenJwt result = null;
         try {
             int maxRetries = Integer
@@ -91,18 +91,20 @@ public class IMSHttpCalls {
                 try {
                     result = new IMSBearerTokenJwt(accessToken, expiresInMs, callTimeMs);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.debug("Failed to create IMSBearerTokenJwt: ", e);
+                    throw new Exception("Failed to create IMSBearerTokenJwt");
                 }
             } else {
+                log.debug("Response NULL at getIMSToken");
                 throw new Exception("Response NULL at getIMSToken");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new Exception(e.getMessage());
         }
         return result;
     }
 
-    public static IMSBearerTokenJwt validateIMSToken(String accessToken, Map<String, ?> configOptions) {
+    public static IMSBearerTokenJwt validateIMSToken(String accessToken, Map<String, ?> configOptions) throws Exception {
 
         IMSBearerTokenJwt result = null;
 
@@ -137,6 +139,7 @@ public class IMSHttpCalls {
                     Thread.sleep(sleepTime);
                     nroRetries++;
                     if (nroRetries > maxRetries) {
+                        log.debug("Maximum retries to IMS reached!");
                         throw new Exception("Maximum retries to IMS reached!");
                     }
                 }
@@ -152,12 +155,14 @@ public class IMSHttpCalls {
                     result = new IMSBearerTokenJwt(tokenJson, accessToken);
                     log.debug("Token is Valid!");
                 } else {
-                    throw new Exception("Invalid IMS Token!");
+                    log.debug("Invalid IMS Token");
+                    throw new Exception("Invalid IMS Token");
                 }
             }
 
         } catch (Exception e) {
             log.error("Problem on Validation of IMS Token", e);
+            throw new Exception(e.getMessage());
         }
         return result;
     }

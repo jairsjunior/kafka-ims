@@ -125,13 +125,23 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
         if (accessToken == null)
             throw new IllegalArgumentException("Callback missing required token value");
 
-        IMSBearerTokenJwt token = IMSHttpCalls.validateIMSToken(accessToken, moduleOptions);
+        IMSBearerTokenJwt token = null;
+        try{
+            token = IMSHttpCalls.validateIMSToken(accessToken, moduleOptions);
+        }catch (Exception e){
+            log.debug("Error during the validate call: ", e);
+            OAuthBearerValidationResult.newFailure(e.getMessage()).throwExceptionIfFailed();
+        }
+
+        if (token == null) {
+            log.debug("Null response received from validation call");
+            OAuthBearerValidationResult.newFailure("Null response received from validation call").throwExceptionIfFailed();
+        }
 
         // Check if Token has expired
         long now = time.milliseconds();
 
         log.debug("Token expiration time: {}", token.lifetimeMs());
-
         if (now > token.lifetimeMs()) {
             log.debug("Token has expired! Needs refresh");
             OAuthBearerValidationResult.newFailure("Expired Token").throwExceptionIfFailed();

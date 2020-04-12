@@ -16,6 +16,7 @@ import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerTokenCallback;
+import org.apache.kafka.common.security.oauthbearer.internals.unsecured.OAuthBearerConfigException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,7 +125,15 @@ public class IMSAuthenticateLoginCallbackHandler implements AuthenticateCallback
             throw new IllegalArgumentException("Callback had a token already");
         }
 
-        IMSBearerTokenJwt token = IMSHttpCalls.getIMSToken(moduleOptions);
+        IMSBearerTokenJwt token = null;
+
+        try{
+            token = IMSHttpCalls.getIMSToken(moduleOptions);
+        }catch (Exception e){
+            log.debug("Error during get IMS Token:", e);
+            throw new IllegalArgumentException(e.getMessage());
+        }
+
         if (token == null) {
             log.debug("Null token returned from server");
             throw new IllegalArgumentException("Null token returned from server");

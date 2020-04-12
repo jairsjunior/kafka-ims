@@ -107,16 +107,23 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
             log.error("Authentication 401 -- Producer Response");
             log.error(produceResponse.toString());
             if(!produceResponse.getOffsets().isEmpty()){
-                if (produceResponse.getOffsets().get(0).getError() != null && produceResponse.getOffsets().get(0).getError().contains("required scopes")){
-                    IMSRestMetrics.getInstance().incWithoutScope(containerRequestContext, resourceInfo);
+                if (produceResponse.getOffsets().get(0).getError() != null ){
                     Map<String, Object> errorResponse = StringsUtil.jsonStringToMap(produceResponse.getOffsets().get(0).getError());
-                    if (errorResponse != null) {
-                        StringBuffer sbuffer = new StringBuffer();
-                        sbuffer.append(errorResponse.get("status")).append(" ").append(errorResponse.get("scope"));
-                        throw new IMSRestException(produceResponse.getOffsets().get(0).getErrorCode(), sbuffer.toString());
-                    }else{
-                        throw new IMSRestException(produceResponse.getOffsets().get(0).getErrorCode(), produceResponse.getOffsets().get(0).getError());
-                    }
+                  if (produceResponse.getOffsets().get(0).getError().contains("required scopes")){
+                      IMSRestMetrics.getInstance().incWithoutScope(containerRequestContext, resourceInfo);
+                      if (errorResponse != null) {
+                          StringBuffer sbuffer = new StringBuffer();
+                          sbuffer.append(errorResponse.get("status")).append(" ").append(errorResponse.get("scope"));
+                          throw new IMSRestException(produceResponse.getOffsets().get(0).getErrorCode(), sbuffer.toString());
+                      }else{
+                          throw new IMSRestException(produceResponse.getOffsets().get(0).getErrorCode(), produceResponse.getOffsets().get(0).getError());
+                      }
+                  } else {
+                      if (errorResponse != null && errorResponse.get("status") != null) {
+                          throw new IMSRestException(produceResponse.getOffsets().get(0).getErrorCode(), errorResponse.get("status").toString());
+                      }
+                      throw new IMSRestException(produceResponse.getOffsets().get(0).getErrorCode(), produceResponse.getOffsets().get(0).getError());
+                  }
                 }
             }
         } else if (ErrorMessage.class.isInstance(containerResponseContext.getEntity())) {
