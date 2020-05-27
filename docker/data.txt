@@ -1,0 +1,10 @@
+{
+  "value_schema_id": 1,"records": [ {
+       "value": {
+         "name":"REST API Test 2 Standalone",
+         "dept":101,
+         "salary":10010.0
+       }
+     }
+   ]
+}

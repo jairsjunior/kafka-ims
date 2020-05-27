@@ -5,10 +5,12 @@ import com.adobe.ids.dim.security.common.StringsUtil;
 import com.adobe.ids.dim.security.common.exception.IMSRestException;
 import com.adobe.ids.dim.security.entity.RequestInfo;
 import com.adobe.ids.dim.security.metrics.IMSRestMetrics;
+import com.adobe.ids.dim.security.rest.cache.CachePrincipal;
 import com.adobe.ids.dim.security.rest.context.KafkaOAuthRestContextFactory;
 import com.adobe.ids.dim.security.util.OAuthRestProxyUtil;
 import io.confluent.kafkarest.entities.ProduceResponse;
 import io.confluent.rest.entities.ErrorMessage;
+import org.glassfish.jersey.internal.guava.MoreObjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,10 +38,10 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
         if (containerResponseContext.getStatusInfo().getFamily().equals(Response.Status.Family.SUCCESSFUL)) {
             IMSRestMetrics.getInstance().incSucessfull(containerRequestContext, resourceInfo);
         } else {
+            cleanContextOfPrincipal(containerRequestContext);
             switch (containerResponseContext.getStatus()) {
                 case 401: {
                     log.debug("Authentication error - Clearing this Principal Context");
-                    cleanContextOfPrincipal(containerRequestContext);
                     generateAuthenticationException(containerRequestContext, containerResponseContext);
                 }
                 break;
@@ -68,10 +70,16 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
                 }
                 break;
                 default: {
-                    log.error("Authentication/Authorization failed!");
-                    log.error("statusCode=" + containerResponseContext.getStatus());
+                    if (ErrorMessage.class.isInstance(containerResponseContext.getEntity())) {
+                        ErrorMessage err = (ErrorMessage) containerResponseContext.getEntity();
+                        log.error("message=" + err.getMessage());
+                        log.error("code=" + err.getErrorCode());
+                    }else{
+                        log.error("Error on processing request");
+                        log.error("responseObject=" + MoreObjects.toStringHelper(containerResponseContext.getEntity()));
+                    }
                     log.error("class=" + containerResponseContext.getEntityClass().getCanonicalName());
-                    log.error("responseObject=" + containerResponseContext.getEntity().toString());
+                    log.error("statusCode=" + containerResponseContext.getStatus());
                     if (ProduceResponse.class.isInstance(containerResponseContext.getEntity())) {
                         ProduceResponse produceResponse = (ProduceResponse) containerResponseContext.getEntity();
                         throw new IMSRestException(produceResponse.getOffsets().get(0).getErrorCode(), containerResponseContext.getStatus(), produceResponse.getOffsets().get(0).getError());
@@ -86,6 +94,7 @@ public class OAuthResponseFilter implements ContainerResponseFilter {
         try{
             IMSBearerTokenJwt token = OAuthRestProxyUtil.getBearerInformation(context, resourceInfo, false);
             KafkaOAuthRestContextFactory.getInstance().cleanSpecificContext(token.principalName());
+            CachePrincipal.getInstance().remove(token.value());
         }catch (IMSRestException e){
             log.error("Could not clean context of principal: ", e);
         }

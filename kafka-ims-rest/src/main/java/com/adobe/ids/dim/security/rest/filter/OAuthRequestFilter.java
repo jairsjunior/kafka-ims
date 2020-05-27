@@ -3,6 +3,7 @@ package com.adobe.ids.dim.security.rest.filter;
 import com.adobe.ids.dim.security.common.IMSBearerTokenJwt;
 import com.adobe.ids.dim.security.common.exception.IMSRestException;
 import com.adobe.ids.dim.security.metrics.IMSRestMetrics;
+import com.adobe.ids.dim.security.rest.cache.CachePrincipal;
 import com.adobe.ids.dim.security.rest.config.KafkaOAuthSecurityRestConfig;
 import com.adobe.ids.dim.security.rest.context.KafkaOAuthRestContextFactory;
 import com.adobe.ids.dim.security.util.OAuthRestProxyUtil;
@@ -11,15 +12,12 @@ import io.confluent.kafkarest.extension.KafkaRestContextProvider;
 import io.confluent.rest.RestConfigException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import javax.annotation.Priority;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 @Priority(1000)
 public class OAuthRequestFilter implements ContainerRequestFilter {
@@ -27,12 +25,13 @@ public class OAuthRequestFilter implements ContainerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(OAuthRequestFilter.class);
     private final KafkaOAuthSecurityRestConfig oauthSecurityRestConfig;
     @Context ResourceInfo resourceInfo;
-    private Map<String, KafkaOAuthSecurityRestConfig> configByPrincipal;
+    private CachePrincipal configByPrincipal;
+
 
     public OAuthRequestFilter(final KafkaOAuthSecurityRestConfig oauthSecurityRestConfig) {
         log.debug("Constructor of OAuthFilter");
         this.oauthSecurityRestConfig = oauthSecurityRestConfig;
-        this.configByPrincipal = new HashMap<>();
+        this.configByPrincipal = CachePrincipal.getInstance();
     }
 
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {
@@ -58,27 +57,26 @@ public class OAuthRequestFilter implements ContainerRequestFilter {
     throws IMSRestException {
         log.debug("getKafkaRestContext");
         final KafkaRestContext context;
-        final KafkaOAuthSecurityRestConfig bearerTokenKafkaRestConfig;
+        KafkaOAuthSecurityRestConfig bearerTokenKafkaRestConfig;
         if (principal instanceof IMSBearerTokenJwt) {
             log.debug("principal is instance of IMSBearerTokenJwt");
             if (!OAuthRestProxyUtil.validateExpiration(principal)) {
                 log.debug("Bearer token has expired!");
                 IMSRestMetrics.getInstance().incExpiredToken(containerRequestContext, resourceInfo);
-                this.configByPrincipal.remove(principal.principalName());
+                this.configByPrincipal.remove(principal.value());
                 KafkaOAuthRestContextFactory.getInstance().cleanSpecificContext(principal.principalName());
                 throw new IMSRestException(
                     IMSRestException.BEARER_TOKEN_EXPIRED_CODE, IMSRestException.BEARER_TOKEN_EXPIRED_MSG);
             }
             try {
-                log.debug("create of bearerTokenKafkaRestConfig");
-                String principalName = principal.principalName();
-                if (this.configByPrincipal.containsKey(principalName)) {
-                    bearerTokenKafkaRestConfig = this.configByPrincipal.get(principalName);
-                } else {
+                log.debug("read of bearerTokenKafkaRestConfig from cache");
+                bearerTokenKafkaRestConfig = this.configByPrincipal.get(principal.value());
+                if (bearerTokenKafkaRestConfig == null) {
+                    log.debug("bearerTokenKafkaRestConfig not found at cache. Create new bearerTokenKafkaRestConfig");
                     bearerTokenKafkaRestConfig =
                         new KafkaOAuthSecurityRestConfig(
                         this.oauthSecurityRestConfig.getOriginalProperties(), principal);
-                    this.configByPrincipal.put(principalName, bearerTokenKafkaRestConfig);
+                    this.configByPrincipal.put(principal.value(), bearerTokenKafkaRestConfig);
                 }
             } catch (RestConfigException e) {
                 log.debug("RestConfigException");
@@ -102,9 +100,9 @@ public class OAuthRequestFilter implements ContainerRequestFilter {
         return context;
     }
 
-    public void cleanConfig(String principal) {
-        if (this.configByPrincipal.containsKey(principal)) {
-            this.configByPrincipal.remove(principal);
-        }
-    }
+//    public void cleanConfig(String principal) {
+//        if (this.configByPrincipal.containsKey(principal)) {
+//            this.configByPrincipal.remove(principal);
+//        }
+//    }
 }

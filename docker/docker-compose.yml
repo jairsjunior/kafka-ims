@@ -45,13 +45,13 @@ services:
       #KAFKA INTERBROKER SECURITY
       KAFKA_SECURITY_INTER_BROKER_PROTOCOL: PLAINTEXT
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
-      KAFKA_LOG4J_LOGGERS: "kafka.controller=DEBUG,org.apache.kafka=DEBUG"
-      KAFKA_LOG4J_ROOT_LOGLEVEL: DEBUG
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,org.apache.kafka=INFO"
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
       ############## Authorizer ######################
       KAFKA_AUTHORIZER_CLASS_NAME: "kafka.security.auth.SimpleAclAuthorizer"
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
       # Access denials are logged at INFO level, change to DEBUG to also log allowed accesses
-      KAFKA_LOG4J_LOGGER_KAFKA_AUTHORIZER_LOGGER: "DEBUG, authorizerAppender"
+      KAFKA_LOG4J_LOGGER_KAFKA_AUTHORIZER_LOGGER: "INFO, authorizerAppender"
       KAFKA_LOG4J_ADDITIVITY_KAFKA_AUTHORIZER_LOGGER: "false"
 
   schema-registry:
@@ -98,8 +98,8 @@ services:
       #Only need for confluentinc/kafka-rest container
       CUB_CLASSPATH: "/etc/confluent/docker/docker-utils.jar:/usr/share/java/kafka-rest/kafka-ims-rest-1.0-SNAPSHOT-jar-with-dependencies.jar -Djava.security.auth.login.config=/etc/kafka-rest/kafka_rest_proxy_jaas.conf"
       ################# log4j ########################
-      KAFKA_REST_LOG4J_LOGGERS: "kafka.controller=INFO,org.apache.kafka=INFO"
-      KAFKA_REST_LOG4J_ROOT_LOGLEVEL: INFO
+      KAFKA_REST_LOG4J_LOGGERS: "kafka.controller=DEBUG,org.apache.kafka=DEBUG"
+      KAFKA_REST_LOG4J_ROOT_LOGLEVEL: DEBUG
 
   hawtio-jmx:
     image: upala-corporation/hawtio-jmx

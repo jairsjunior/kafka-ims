@@ -17,9 +17,10 @@ import org.apache.kafka.common.config.ConfigDef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.Properties;
 
-public final class KafkaOAuthSecurityRestConfig extends KafkaRestConfig {
+public final class KafkaOAuthSecurityRestConfig extends KafkaRestConfig implements Serializable {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaOAuthSecurityRestConfig.class);
     private static final ConfigDef configDef = createBaseConfigDef();

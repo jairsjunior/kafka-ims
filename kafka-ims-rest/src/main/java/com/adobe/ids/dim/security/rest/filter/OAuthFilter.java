@@ -8,9 +8,7 @@ import com.adobe.ids.dim.security.rest.config.KafkaOAuthSecurityRestConfig;
 import com.adobe.ids.dim.security.rest.context.KafkaOAuthRestContextFactory;
 import io.confluent.kafkarest.KafkaRestContext;
 import io.confluent.kafkarest.extension.KafkaRestContextProvider;
-import io.confluent.kafkarest.resources.v2.ConsumersResource;
 import io.confluent.rest.RestConfigException;
-import io.confluent.rest.exceptions.RestNotAuthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
